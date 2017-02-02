@@ -8,17 +8,13 @@ namespace Arbitrader.GW2API
 {
     internal class Recipe
     {
-        internal static readonly string Controller = "recipes";
-
-        public int id;
-        public string type;
-        public int outputItemID;
-        public int outputItemCount;
-        public IEnumerable<CraftingDiscipline> disciplines;
-        public int minRating;
-        public List<Item> ingredients;
-        public List<Item> guildIngredients;
-
-
+        public int id{ get; set; }
+        public string type{ get; set; }
+        public int outputItemID{ get; set; }
+        public int outputItemCount{ get; set; }
+        public IEnumerable<CraftingDiscipline> disciplines{ get; set; }
+        public int minRating{ get; set; }
+        public List<Item> ingredients{ get; set; }
+        public List<Item> guildIngredients{ get; set; }
     }
 }

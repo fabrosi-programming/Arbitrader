@@ -7,66 +7,71 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
+using Arbitrader.GW2API.Properties;
 
 namespace Arbitrader.GW2API
 {
     public class ItemContext
     {
-        private List<Item> items;
-        private List<Recipe> recipes;
+        private List<Item> _items;
+        private List<Recipe> _recipes;
 
-        private static readonly string itemsResource = "items";
-        private static readonly string recipesResource = "recipes";
+        private static readonly string _itemsResource = "items";
+        private static readonly string _recipesResource = "recipes";
+
+        public ItemContext()
+        {
+            this._items = new List<Item>();
+            this._recipes = new List<Recipe>();
+        }
 
         public async Task Initialize(HttpClient client, ManualResetEvent resetEvent)
         {
             this.InitializeHttpClient(client);
 
             //TODO: parallelize
-            await this.GetItemsAsync(client);
-            await this.GetRecipesAsync(client);
+            await this.GetAsync<Item>(client, _itemsResource, this._items);
+            await this.GetAsync<Recipe>(client, _recipesResource, this._recipes);
 
             resetEvent.Set();
         }
 
         private void InitializeHttpClient(HttpClient client)
         {
-            //client.BaseAddress = new Uri(Properties.Settings.Default.APIBaseURL);
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
-        private async Task GetItemsAsync(HttpClient client)
+        private async Task GetAsync<T>(HttpClient client, string resource, List<T> targetList)
         {
-            var itemIDs = new List<int>();
+            List<int> ids = new List<int>();
 
-            var baseURL = Properties.Settings.Default.APIBaseURL;
-            var itemsURL = $"{baseURL}/{itemsResource}";
-            var itemsResponse = await client.GetAsync(itemsURL);
+            var baseURL = Settings.Default.APIBaseURL;
+            var listURL = $"{baseURL}/{resource}";
+            var response = await client.GetAsync(listURL);
 
-            if (itemsResponse.IsSuccessStatusCode)
-                itemIDs = await itemsResponse.Content.ReadAsAsync<List<int>>();
+            if (response.IsSuccessStatusCode)
+                ids = await response.Content.ReadAsAsync<List<int>>();
 
-            foreach (var id in itemIDs)
+#if DEBUG
+            // limit to 100 items for testing
+            ids = (from id in ids
+                   where ids.IndexOf(id) < 100
+                   select id).ToList();
+#endif
+
+            foreach (var id in ids)
             {
-                var singleItemURL = $"{itemsURL}/{id}";
-                var singleItemResponse = await client.GetAsync(singleItemURL);
+                var singleResultURL = $"{listURL}/{id}";
+                var singleResultResponse = await client.GetAsync(singleResultURL);
 
-                if (singleItemResponse.IsSuccessStatusCode)
+                if (singleResultResponse.IsSuccessStatusCode)
                 {
-                    var item = await singleItemResponse.Content.ReadAsAsync<Item>();
-                    this.items.Add(item);
+                    var result = await singleResultResponse.Content.ReadAsAsync<T>();
+                    targetList.Add(result);
                 }
             }
-        }
 
-        public async Task GetRecipesAsync(HttpClient client)
-        {
-            var baseURL = Properties.Settings.Default.APIBaseURL;
-            var recipesURL = $"{baseURL}/{recipesResource}";
-            var recipesRequest = WebRequest.Create(recipesURL);
-            recipesRequest.Method = "GET";
-            var recipesResponse = recipesRequest.GetResponse();
         }
     }
 }

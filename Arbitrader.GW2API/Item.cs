@@ -4,14 +4,13 @@ namespace Arbitrader.GW2API
 {
     internal class Item
     {
-        int? id { get; set; }
-        string name { get; set; }
-        string icon { get; set; }
-        string type { get; set; }
-        string rarity { get; set; }
-        int? level { get; set; }
-        int? vendor_value { get; set; }
-        List<string> flags { get; set; }
-        int? size { get; set; }
+        public string name { get; set; }
+        public string type { get; set; }
+        public int level { get; set; }
+        public string rarity { get; set; }
+        public int? vendor_value { get; set; }
+        public List<string> flags { get; set; }
+        public int id { get; set; }
+        public string icon { get; set; }
     }
 }
