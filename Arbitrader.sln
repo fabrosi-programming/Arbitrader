@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Arbitrader.GW2API", "Arbitr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Arbitrader.Sandbox", "Arbitrader.Sandbox\Arbitrader.Sandbox.csproj", "{17ECBB18-B520-417D-A64E-A7A80B3ABED4}"
 EndProject
+Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "Arbitrader.Database", "Arbitrader.Database\Arbitrader.Database.sqlproj", "{26B09B82-EB59-43DE-A5A9-1CBAE188FF91}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,12 @@ Global
 		{17ECBB18-B520-417D-A64E-A7A80B3ABED4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{17ECBB18-B520-417D-A64E-A7A80B3ABED4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{17ECBB18-B520-417D-A64E-A7A80B3ABED4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26B09B82-EB59-43DE-A5A9-1CBAE188FF91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26B09B82-EB59-43DE-A5A9-1CBAE188FF91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26B09B82-EB59-43DE-A5A9-1CBAE188FF91}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{26B09B82-EB59-43DE-A5A9-1CBAE188FF91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26B09B82-EB59-43DE-A5A9-1CBAE188FF91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26B09B82-EB59-43DE-A5A9-1CBAE188FF91}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
