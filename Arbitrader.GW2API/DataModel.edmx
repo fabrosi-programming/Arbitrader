@@ -1,0 +1,485 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+      <Schema Namespace="ArbitraderModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012.Azure" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="Discipline">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="name" Type="nvarchar" MaxLength="50" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Flag">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Flag" Type="nvarchar" MaxLength="50" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Ingredients">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="int" Nullable="false" />
+          <Property Name="itemID" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Item">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="name" Type="nvarchar" MaxLength="255" Nullable="false" />
+          <Property Name="type" Type="nvarchar" MaxLength="50" />
+          <Property Name="level" Type="int" Nullable="false" />
+          <Property Name="rarity" Type="nvarchar" MaxLength="50" />
+          <Property Name="vendor_value" Type="int" />
+          <Property Name="itemFlagID" Type="int" />
+          <Property Name="icon" Type="nvarchar" MaxLength="1023" />
+        </EntityType>
+        <EntityType Name="ItemFlag">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="flagID" Type="int" />
+        </EntityType>
+        <EntityType Name="Recipe">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="type" Type="nvarchar" MaxLength="50" />
+          <Property Name="outputItemID" Type="int" Nullable="false" />
+          <Property Name="outputItemCount" Type="int" />
+          <Property Name="recipeDisciplineID" Type="int" Nullable="false" />
+          <Property Name="minRating" Type="int" />
+          <Property Name="ingredientsID" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="RecipeDiscipline">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="int" Nullable="false" />
+          <Property Name="disciplineID" Type="int" />
+        </EntityType>
+        <Association Name="FK_Ingredients_Item">
+          <End Role="Item" Type="Self.Item" Multiplicity="1" />
+          <End Role="Ingredients" Type="Self.Ingredients" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Item">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="Ingredients">
+              <PropertyRef Name="itemID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Item_ItemFlag">
+          <End Role="ItemFlag" Type="Self.ItemFlag" Multiplicity="0..1" />
+          <End Role="Item" Type="Self.Item" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="ItemFlag">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="Item">
+              <PropertyRef Name="itemFlagID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ItemFlag_Flag">
+          <End Role="Flag" Type="Self.Flag" Multiplicity="0..1" />
+          <End Role="ItemFlag" Type="Self.ItemFlag" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Flag">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="ItemFlag">
+              <PropertyRef Name="flagID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Recipe_Ingredients">
+          <End Role="Ingredients" Type="Self.Ingredients" Multiplicity="1" />
+          <End Role="Recipe" Type="Self.Recipe" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ingredients">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="Recipe">
+              <PropertyRef Name="ingredientsID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Recipe_Item_outputItemID">
+          <End Role="Item" Type="Self.Item" Multiplicity="1" />
+          <End Role="Recipe" Type="Self.Recipe" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Item">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="Recipe">
+              <PropertyRef Name="outputItemID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Recipe_RecipeDiscipline">
+          <End Role="RecipeDiscipline" Type="Self.RecipeDiscipline" Multiplicity="1" />
+          <End Role="Recipe" Type="Self.Recipe" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RecipeDiscipline">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="Recipe">
+              <PropertyRef Name="recipeDisciplineID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RecipeDiscipline_Discipline">
+          <End Role="Discipline" Type="Self.Discipline" Multiplicity="0..1" />
+          <End Role="RecipeDiscipline" Type="Self.RecipeDiscipline" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Discipline">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="RecipeDiscipline">
+              <PropertyRef Name="disciplineID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityContainer Name="ArbitraderModelStoreContainer">
+          <EntitySet Name="Discipline" EntityType="Self.Discipline" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Flag" EntityType="Self.Flag" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Ingredients" EntityType="Self.Ingredients" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Item" EntityType="Self.Item" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ItemFlag" EntityType="Self.ItemFlag" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Recipe" EntityType="Self.Recipe" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="RecipeDiscipline" EntityType="Self.RecipeDiscipline" Schema="dbo" store:Type="Tables" />
+          <AssociationSet Name="FK_Ingredients_Item" Association="Self.FK_Ingredients_Item">
+            <End Role="Item" EntitySet="Item" />
+            <End Role="Ingredients" EntitySet="Ingredients" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Item_ItemFlag" Association="Self.FK_Item_ItemFlag">
+            <End Role="ItemFlag" EntitySet="ItemFlag" />
+            <End Role="Item" EntitySet="Item" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ItemFlag_Flag" Association="Self.FK_ItemFlag_Flag">
+            <End Role="Flag" EntitySet="Flag" />
+            <End Role="ItemFlag" EntitySet="ItemFlag" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Recipe_Ingredients" Association="Self.FK_Recipe_Ingredients">
+            <End Role="Ingredients" EntitySet="Ingredients" />
+            <End Role="Recipe" EntitySet="Recipe" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Recipe_Item_outputItemID" Association="Self.FK_Recipe_Item_outputItemID">
+            <End Role="Item" EntitySet="Item" />
+            <End Role="Recipe" EntitySet="Recipe" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Recipe_RecipeDiscipline" Association="Self.FK_Recipe_RecipeDiscipline">
+            <End Role="RecipeDiscipline" EntitySet="RecipeDiscipline" />
+            <End Role="Recipe" EntitySet="Recipe" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RecipeDiscipline_Discipline" Association="Self.FK_RecipeDiscipline_Discipline">
+            <End Role="Discipline" EntitySet="Discipline" />
+            <End Role="RecipeDiscipline" EntitySet="RecipeDiscipline" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema>
+    </edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="ArbitraderModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityType Name="Discipline">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="name" Type="String" MaxLength="50" FixedLength="false" Unicode="true" Nullable="false" />
+          <NavigationProperty Name="RecipeDisciplines" Relationship="Self.FK_RecipeDiscipline_Discipline" FromRole="Discipline" ToRole="RecipeDiscipline" />
+        </EntityType>
+        <EntityType Name="Flag">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Flag1" Type="String" MaxLength="50" FixedLength="false" Unicode="true" Nullable="false" />
+          <NavigationProperty Name="ItemFlags" Relationship="Self.FK_ItemFlag_Flag" FromRole="Flag" ToRole="ItemFlag" />
+        </EntityType>
+        <EntityType Name="Ingredient">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int32" Nullable="false" />
+          <Property Name="itemID" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="Item" Relationship="Self.FK_Ingredients_Item" FromRole="Ingredients" ToRole="Item" />
+          <NavigationProperty Name="Recipes" Relationship="Self.FK_Recipe_Ingredients" FromRole="Ingredients" ToRole="Recipe" />
+        </EntityType>
+        <EntityType Name="Item">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="name" Type="String" MaxLength="255" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="type" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="level" Type="Int32" Nullable="false" />
+          <Property Name="rarity" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="vendor_value" Type="Int32" />
+          <Property Name="itemFlagID" Type="Int32" />
+          <Property Name="icon" Type="String" MaxLength="1023" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Ingredients" Relationship="Self.FK_Ingredients_Item" FromRole="Item" ToRole="Ingredients" />
+          <NavigationProperty Name="ItemFlag" Relationship="Self.FK_Item_ItemFlag" FromRole="Item" ToRole="ItemFlag" />
+          <NavigationProperty Name="Recipes" Relationship="Self.FK_Recipe_Item_outputItemID" FromRole="Item" ToRole="Recipe" />
+        </EntityType>
+        <EntityType Name="ItemFlag">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="flagID" Type="Int32" />
+          <NavigationProperty Name="Flag" Relationship="Self.FK_ItemFlag_Flag" FromRole="ItemFlag" ToRole="Flag" />
+          <NavigationProperty Name="Items" Relationship="Self.FK_Item_ItemFlag" FromRole="ItemFlag" ToRole="Item" />
+        </EntityType>
+        <EntityType Name="Recipe">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="type" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="outputItemID" Type="Int32" Nullable="false" />
+          <Property Name="outputItemCount" Type="Int32" />
+          <Property Name="recipeDisciplineID" Type="Int32" Nullable="false" />
+          <Property Name="minRating" Type="Int32" />
+          <Property Name="ingredientsID" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="Ingredient" Relationship="Self.FK_Recipe_Ingredients" FromRole="Recipe" ToRole="Ingredients" />
+          <NavigationProperty Name="Item" Relationship="Self.FK_Recipe_Item_outputItemID" FromRole="Recipe" ToRole="Item" />
+          <NavigationProperty Name="RecipeDiscipline" Relationship="Self.FK_Recipe_RecipeDiscipline" FromRole="Recipe" ToRole="RecipeDiscipline" />
+        </EntityType>
+        <EntityType Name="RecipeDiscipline">
+          <Key>
+            <PropertyRef Name="ID" />
+          </Key>
+          <Property Name="ID" Type="Int32" Nullable="false" />
+          <Property Name="disciplineID" Type="Int32" />
+          <NavigationProperty Name="Discipline" Relationship="Self.FK_RecipeDiscipline_Discipline" FromRole="RecipeDiscipline" ToRole="Discipline" />
+          <NavigationProperty Name="Recipes" Relationship="Self.FK_Recipe_RecipeDiscipline" FromRole="RecipeDiscipline" ToRole="Recipe" />
+        </EntityType>
+        <Association Name="FK_RecipeDiscipline_Discipline">
+          <End Role="Discipline" Type="Self.Discipline" Multiplicity="0..1" />
+          <End Role="RecipeDiscipline" Type="Self.RecipeDiscipline" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Discipline">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="RecipeDiscipline">
+              <PropertyRef Name="disciplineID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ItemFlag_Flag">
+          <End Role="Flag" Type="Self.Flag" Multiplicity="0..1" />
+          <End Role="ItemFlag" Type="Self.ItemFlag" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Flag">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="ItemFlag">
+              <PropertyRef Name="flagID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Ingredients_Item">
+          <End Role="Item" Type="Self.Item" Multiplicity="1" />
+          <End Role="Ingredients" Type="Self.Ingredient" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Item">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="Ingredients">
+              <PropertyRef Name="itemID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Recipe_Ingredients">
+          <End Role="Ingredients" Type="Self.Ingredient" Multiplicity="1" />
+          <End Role="Recipe" Type="Self.Recipe" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ingredients">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="Recipe">
+              <PropertyRef Name="ingredientsID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Item_ItemFlag">
+          <End Role="ItemFlag" Type="Self.ItemFlag" Multiplicity="0..1" />
+          <End Role="Item" Type="Self.Item" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="ItemFlag">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="Item">
+              <PropertyRef Name="itemFlagID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Recipe_Item_outputItemID">
+          <End Role="Item" Type="Self.Item" Multiplicity="1" />
+          <End Role="Recipe" Type="Self.Recipe" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Item">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="Recipe">
+              <PropertyRef Name="outputItemID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Recipe_RecipeDiscipline">
+          <End Role="RecipeDiscipline" Type="Self.RecipeDiscipline" Multiplicity="1" />
+          <End Role="Recipe" Type="Self.Recipe" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RecipeDiscipline">
+              <PropertyRef Name="ID" />
+            </Principal>
+            <Dependent Role="Recipe">
+              <PropertyRef Name="recipeDisciplineID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityContainer Name="ArbitraderEntities" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="Disciplines" EntityType="Self.Discipline" />
+          <EntitySet Name="Flags" EntityType="Self.Flag" />
+          <EntitySet Name="Ingredients" EntityType="Self.Ingredient" />
+          <EntitySet Name="Items" EntityType="Self.Item" />
+          <EntitySet Name="ItemFlags" EntityType="Self.ItemFlag" />
+          <EntitySet Name="Recipes" EntityType="Self.Recipe" />
+          <EntitySet Name="RecipeDisciplines" EntityType="Self.RecipeDiscipline" />
+          <AssociationSet Name="FK_RecipeDiscipline_Discipline" Association="Self.FK_RecipeDiscipline_Discipline">
+            <End Role="Discipline" EntitySet="Disciplines" />
+            <End Role="RecipeDiscipline" EntitySet="RecipeDisciplines" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ItemFlag_Flag" Association="Self.FK_ItemFlag_Flag">
+            <End Role="Flag" EntitySet="Flags" />
+            <End Role="ItemFlag" EntitySet="ItemFlags" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Ingredients_Item" Association="Self.FK_Ingredients_Item">
+            <End Role="Item" EntitySet="Items" />
+            <End Role="Ingredients" EntitySet="Ingredients" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Recipe_Ingredients" Association="Self.FK_Recipe_Ingredients">
+            <End Role="Ingredients" EntitySet="Ingredients" />
+            <End Role="Recipe" EntitySet="Recipes" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Item_ItemFlag" Association="Self.FK_Item_ItemFlag">
+            <End Role="ItemFlag" EntitySet="ItemFlags" />
+            <End Role="Item" EntitySet="Items" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Recipe_Item_outputItemID" Association="Self.FK_Recipe_Item_outputItemID">
+            <End Role="Item" EntitySet="Items" />
+            <End Role="Recipe" EntitySet="Recipes" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Recipe_RecipeDiscipline" Association="Self.FK_Recipe_RecipeDiscipline">
+            <End Role="RecipeDiscipline" EntitySet="RecipeDisciplines" />
+            <End Role="Recipe" EntitySet="Recipes" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="ArbitraderModelStoreContainer" CdmEntityContainer="ArbitraderEntities">
+          <EntitySetMapping Name="Disciplines">
+            <EntityTypeMapping TypeName="ArbitraderModel.Discipline">
+              <MappingFragment StoreEntitySet="Discipline">
+                <ScalarProperty Name="ID" ColumnName="ID" />
+                <ScalarProperty Name="name" ColumnName="name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Flags">
+            <EntityTypeMapping TypeName="ArbitraderModel.Flag">
+              <MappingFragment StoreEntitySet="Flag">
+                <ScalarProperty Name="ID" ColumnName="ID" />
+                <ScalarProperty Name="Flag1" ColumnName="Flag" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Ingredients">
+            <EntityTypeMapping TypeName="ArbitraderModel.Ingredient">
+              <MappingFragment StoreEntitySet="Ingredients">
+                <ScalarProperty Name="ID" ColumnName="ID" />
+                <ScalarProperty Name="itemID" ColumnName="itemID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Items">
+            <EntityTypeMapping TypeName="ArbitraderModel.Item">
+              <MappingFragment StoreEntitySet="Item">
+                <ScalarProperty Name="ID" ColumnName="ID" />
+                <ScalarProperty Name="name" ColumnName="name" />
+                <ScalarProperty Name="type" ColumnName="type" />
+                <ScalarProperty Name="level" ColumnName="level" />
+                <ScalarProperty Name="rarity" ColumnName="rarity" />
+                <ScalarProperty Name="vendor_value" ColumnName="vendor_value" />
+                <ScalarProperty Name="itemFlagID" ColumnName="itemFlagID" />
+                <ScalarProperty Name="icon" ColumnName="icon" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ItemFlags">
+            <EntityTypeMapping TypeName="ArbitraderModel.ItemFlag">
+              <MappingFragment StoreEntitySet="ItemFlag">
+                <ScalarProperty Name="ID" ColumnName="ID" />
+                <ScalarProperty Name="flagID" ColumnName="flagID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Recipes">
+            <EntityTypeMapping TypeName="ArbitraderModel.Recipe">
+              <MappingFragment StoreEntitySet="Recipe">
+                <ScalarProperty Name="ID" ColumnName="ID" />
+                <ScalarProperty Name="type" ColumnName="type" />
+                <ScalarProperty Name="outputItemID" ColumnName="outputItemID" />
+                <ScalarProperty Name="outputItemCount" ColumnName="outputItemCount" />
+                <ScalarProperty Name="recipeDisciplineID" ColumnName="recipeDisciplineID" />
+                <ScalarProperty Name="minRating" ColumnName="minRating" />
+                <ScalarProperty Name="ingredientsID" ColumnName="ingredientsID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RecipeDisciplines">
+            <EntityTypeMapping TypeName="ArbitraderModel.RecipeDiscipline">
+              <MappingFragment StoreEntitySet="RecipeDiscipline">
+                <ScalarProperty Name="ID" ColumnName="ID" />
+                <ScalarProperty Name="disciplineID" ColumnName="disciplineID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="true" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="true" />
+        <DesignerProperty Name="UseLegacyProvider" Value="false" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>

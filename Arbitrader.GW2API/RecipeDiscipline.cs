@@ -12,27 +12,18 @@ namespace Arbitrader.GW2API
     using System;
     using System.Collections.Generic;
     
-    public partial class Item
+    public partial class RecipeDiscipline
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public Item()
+        public RecipeDiscipline()
         {
-            this.Ingredients = new HashSet<Ingredient>();
             this.Recipes = new HashSet<Recipe>();
         }
     
         public int ID { get; set; }
-        public string name { get; set; }
-        public string type { get; set; }
-        public int level { get; set; }
-        public string rarity { get; set; }
-        public Nullable<int> vendor_value { get; set; }
-        public Nullable<int> itemFlagID { get; set; }
-        public string icon { get; set; }
+        public Nullable<int> disciplineID { get; set; }
     
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Ingredient> Ingredients { get; set; }
-        public virtual ItemFlag ItemFlag { get; set; }
+        public virtual Discipline Discipline { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Recipe> Recipes { get; set; }
     }

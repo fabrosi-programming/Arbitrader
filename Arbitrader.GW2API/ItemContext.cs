@@ -8,30 +8,24 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using Arbitrader.GW2API.Properties;
+using System.Data.Entity;
 
 namespace Arbitrader.GW2API
 {
     public class ItemContext
     {
-        private List<Item> _items;
-        private List<Recipe> _recipes;
-
         private static readonly string _itemsResource = "items";
         private static readonly string _recipesResource = "recipes";
-
-        public ItemContext()
-        {
-            this._items = new List<Item>();
-            this._recipes = new List<Recipe>();
-        }
 
         public async Task Initialize(HttpClient client, ManualResetEvent resetEvent)
         {
             this.InitializeHttpClient(client);
 
-            //TODO: parallelize
-            await this.GetAsync<Item>(client, _itemsResource, this._items);
-            await this.GetAsync<Recipe>(client, _recipesResource, this._recipes);
+            var entities = new ArbitraderEntities();
+            await DeleteExistingData(entities);
+
+            await this.UploadToDatabaseAsync<Item>(client, _itemsResource, entities.Items, entities);
+            await this.UploadToDatabaseAsync<Recipe>(client, _recipesResource, entities.Recipes, entities);
 
             resetEvent.Set();
         }
@@ -42,7 +36,19 @@ namespace Arbitrader.GW2API
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
-        private async Task GetAsync<T>(HttpClient client, string resource, List<T> targetList)
+        private static async Task DeleteExistingData(ArbitraderEntities entities)
+        {
+            await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[Discipline]");
+            await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[RecipeDiscipline]");
+            await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[Ingredients]");
+            await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[Recipe]");
+            
+            await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[Flag]");
+            await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[ItemFlag]");
+            await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[Item]");
+        }
+
+        private async Task UploadToDatabaseAsync<T>(HttpClient client, string resource, DbSet<T> targetDataSet, ArbitraderEntities entities) where T : class
         {
             List<int> ids = new List<int>();
 
@@ -68,10 +74,11 @@ namespace Arbitrader.GW2API
                 if (singleResultResponse.IsSuccessStatusCode)
                 {
                     var result = await singleResultResponse.Content.ReadAsAsync<T>();
-                    targetList.Add(result);
+                    targetDataSet.Add(result);
                 }
             }
 
+            await Task.Run(() => entities.SaveChanges());
         }
     }
 }
