@@ -14,8 +14,34 @@ namespace Arbitrader.GW2API
 {
     public class ItemContext
     {
+        public class DataLoadStatusUpdateEventArgs : EventArgs
+        {
+            public string Resource { get; set; }
+            public int Count { get; set; }
+
+            public DataLoadStatusUpdateEventArgs(string resource, int count)
+            {
+                this.Resource = resource;
+                this.Count = count;
+            }
+        }
+
+        public event EventHandler<DataLoadStatusUpdateEventArgs> RaiseDataLoadStatusUpdate;
+
+        protected virtual void OnRaiseDataLoadStatusUpdate(DataLoadStatusUpdateEventArgs e)
+        {
+            RaiseDataLoadStatusUpdate?.Invoke(this, e);
+        }
+
         private static readonly string _itemsResource = "items";
         private static readonly string _recipesResource = "recipes";
+
+        private int _updateInterval = 100;
+
+        public ItemContext(int updateInterval = 100)
+        {
+            this._updateInterval = updateInterval;
+        }
 
         public async Task Initialize(HttpClient client, ManualResetEvent resetEvent)
         {
@@ -59,15 +85,19 @@ namespace Arbitrader.GW2API
             if (response.IsSuccessStatusCode)
                 ids = await response.Content.ReadAsAsync<List<int>>();
 
-#if DEBUG
-            // limit to 100 items for testing
-            ids = (from id in ids
-                   where ids.IndexOf(id) < 100
-                   select id).ToList();
-#endif
+            //#if DEBUG
+            //            // limit to 100 items for testing
+            //            ids = (from id in ids
+            //                   where ids.IndexOf(id) < 100
+            //                   select id).ToList();
+            //#endif
+
+            var count = 0;
 
             foreach (var id in ids)
             {
+                count += 1;
+
                 var singleResultURL = $"{listURL}/{id}";
                 var singleResultResponse = await client.GetAsync(singleResultURL);
 
@@ -76,9 +106,13 @@ namespace Arbitrader.GW2API
                     var result = await singleResultResponse.Content.ReadAsAsync<T>();
                     targetDataSet.Add(result);
                 }
-            }
 
-            await Task.Run(() => entities.SaveChanges());
+                if (count % _updateInterval == 0)
+                {
+                    await Task.Run(() => entities.SaveChanges());
+                    this.OnRaiseDataLoadStatusUpdate(new DataLoadStatusUpdateEventArgs(resource, count));
+                }
+            }
         }
     }
 }
