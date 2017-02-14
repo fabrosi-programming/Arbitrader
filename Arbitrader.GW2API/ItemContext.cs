@@ -14,46 +14,73 @@ namespace Arbitrader.GW2API
 {
     public class ItemContext
     {
-        public class DataLoadStatusUpdateEventArgs : EventArgs
+        #region Events
+        public class DataLoadEventArgs : EventArgs
         {
             public string Resource { get; set; }
-            public int Count { get; set; }
+            public int? Count { get; set; }
 
-            public DataLoadStatusUpdateEventArgs(string resource, int count)
+            public DataLoadEventArgs(string resource, int? count)
             {
                 this.Resource = resource;
                 this.Count = count;
             }
         }
 
-        public event EventHandler<DataLoadStatusUpdateEventArgs> RaiseDataLoadStatusUpdate;
+        public event EventHandler<DataLoadEventArgs> DataLoadStarted;
+        public event EventHandler<DataLoadEventArgs> DataLoadFinished;
+        public event EventHandler<DataLoadEventArgs> DataLoadStatusUpdate;
 
-        protected virtual void OnRaiseDataLoadStatusUpdate(DataLoadStatusUpdateEventArgs e)
+        protected virtual void OnDataLoadStarted(DataLoadEventArgs e)
         {
-            RaiseDataLoadStatusUpdate?.Invoke(this, e);
+            DataLoadStarted?.Invoke(this, e);
+        }
+
+        protected virtual void OnDataLoadFinished(DataLoadEventArgs e)
+        {
+            DataLoadFinished?.Invoke(this, e);
+        }
+
+        protected virtual void OnDataLoadStatusUpdate(DataLoadEventArgs e)
+        {
+            DataLoadStatusUpdate?.Invoke(this, e);
+        }
+        #endregion
+
+        public enum Resource
+        {
+            Items,
+            Recipes
         }
 
         private static readonly string _itemsResource = "items";
         private static readonly string _recipesResource = "recipes";
 
-        private int _updateInterval = 100;
+        private int _updateInterval = 1000;
 
-        public ItemContext(int updateInterval = 100)
+        public ItemContext(int updateInterval = 1000)
         {
             this._updateInterval = updateInterval;
         }
 
-        public async Task Initialize(HttpClient client, ManualResetEvent resetEvent)
+        public async Task InitializeAsync(HttpClient client, Resource resource)
         {
             this.InitializeHttpClient(client);
 
             var entities = new ArbitraderEntities();
-            await DeleteExistingData(entities);
+            await DeleteExistingDataAsync(entities);
 
-            await this.UploadToDatabaseAsync<Item>(client, _itemsResource, entities.Items, entities);
-            await this.UploadToDatabaseAsync<Recipe>(client, _recipesResource, entities.Recipes, entities);
-
-            resetEvent.Set();
+            switch (resource)
+            {
+                case Resource.Items:
+                    await this.UploadToDatabaseAsync<Item>(client, _itemsResource, entities.Items, entities);
+                    break;
+                case Resource.Recipes:
+                    await this.UploadToDatabaseAsync<Recipe>(client, _recipesResource, entities.Recipes, entities);
+                    break;
+                default:
+                    break;
+            }
         }
 
         private void InitializeHttpClient(HttpClient client)
@@ -62,16 +89,16 @@ namespace Arbitrader.GW2API
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
-        private static async Task DeleteExistingData(ArbitraderEntities entities)
+        private async Task DeleteExistingDataAsync(ArbitraderEntities entities)
         {
+            await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[Flag]");
+            await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[ItemFlag]");
+            await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[Item]");
+            
             await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[Discipline]");
             await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[RecipeDiscipline]");
             await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[Ingredients]");
             await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[Recipe]");
-            
-            await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[Flag]");
-            await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[ItemFlag]");
-            await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[Item]");
         }
 
         private async Task UploadToDatabaseAsync<T>(HttpClient client, string resource, DbSet<T> targetDataSet, ArbitraderEntities entities) where T : class
@@ -85,12 +112,15 @@ namespace Arbitrader.GW2API
             if (response.IsSuccessStatusCode)
                 ids = await response.Content.ReadAsAsync<List<int>>();
 
-            //#if DEBUG
-            //            // limit to 100 items for testing
-            //            ids = (from id in ids
-            //                   where ids.IndexOf(id) < 100
-            //                   select id).ToList();
-            //#endif
+            
+            this.OnDataLoadStarted(new DataLoadEventArgs(resource, ids.Count));
+
+#if DEBUG
+            // limit to 100 items for testing
+            ids = (from id in ids
+                   where ids.IndexOf(id) < 100
+                   select id).ToList();
+#endif
 
             var count = 0;
 
@@ -110,9 +140,13 @@ namespace Arbitrader.GW2API
                 if (count % _updateInterval == 0)
                 {
                     await Task.Run(() => entities.SaveChanges());
-                    this.OnRaiseDataLoadStatusUpdate(new DataLoadStatusUpdateEventArgs(resource, count));
+                    this.OnDataLoadStatusUpdate(new DataLoadEventArgs(resource, count));
                 }
             }
+
+            await Task.Run(() => entities.SaveChanges());
+
+            this.OnDataLoadFinished(new DataLoadEventArgs(resource, null));
         }
     }
 }
