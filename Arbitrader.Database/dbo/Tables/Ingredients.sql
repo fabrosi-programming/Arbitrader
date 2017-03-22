@@ -1,6 +1,8 @@
 ﻿CREATE TABLE [dbo].[Ingredients]
 (
-	[ID] INT NOT NULL PRIMARY KEY, 
-    [itemID] INT NOT NULL, 
-    CONSTRAINT [FK_Ingredients_Item] FOREIGN KEY ([itemID]) REFERENCES [dbo].[Item]([ID])
+	[pk] INT NOT NULL PRIMARY KEY, 
+	[id] INT NOT NULL,
+    [itemPK] INT NOT NULL, 
+	[loadDate] DATETIME2 NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT [FK_Ingredients_Item] FOREIGN KEY ([itemPK]) REFERENCES [dbo].[Item]([pk])
 )

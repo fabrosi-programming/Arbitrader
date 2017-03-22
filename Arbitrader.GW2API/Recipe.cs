@@ -14,13 +14,15 @@ namespace Arbitrader.GW2API
     
     public partial class Recipe
     {
-        public int ID { get; set; }
+        public int pk { get; set; }
+        public int id { get; set; }
         public string type { get; set; }
-        public int outputItemID { get; set; }
+        public int outputItemPK { get; set; }
         public Nullable<int> outputItemCount { get; set; }
-        public int recipeDisciplineID { get; set; }
+        public int recipeDisciplinePK { get; set; }
         public Nullable<int> minRating { get; set; }
-        public int ingredientsID { get; set; }
+        public int ingredientsPK { get; set; }
+        public System.DateTime loadDate { get; set; }
     
         public virtual Ingredient Ingredient { get; set; }
         public virtual Item Item { get; set; }

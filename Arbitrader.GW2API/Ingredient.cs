@@ -20,8 +20,10 @@ namespace Arbitrader.GW2API
             this.Recipes = new HashSet<Recipe>();
         }
     
-        public int ID { get; set; }
-        public int itemID { get; set; }
+        public int pk { get; set; }
+        public int id { get; set; }
+        public int itemPK { get; set; }
+        public System.DateTime loadDate { get; set; }
     
         public virtual Item Item { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]

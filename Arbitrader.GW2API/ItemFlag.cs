@@ -20,8 +20,9 @@ namespace Arbitrader.GW2API
             this.Items = new HashSet<Item>();
         }
     
-        public int ID { get; set; }
-        public Nullable<int> flagID { get; set; }
+        public int pk { get; set; }
+        public Nullable<int> flagPK { get; set; }
+        public System.DateTime loadDate { get; set; }
     
         public virtual Flag Flag { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]

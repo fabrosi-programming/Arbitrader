@@ -14,7 +14,7 @@ namespace Arbitrader.Sandbox
             public Action Action { get; set; }
         }
 
-        private Dictionary<char, MenuOption> _menuOptions { get; set; }
+        private Dictionary<char, MenuOption> _menuOptions;
         public string Header { get; set; }
         public bool IsTopLevel { get; set; }
 
@@ -22,7 +22,7 @@ namespace Arbitrader.Sandbox
         {
             this._menuOptions = new Dictionary<char, MenuOption>();
             this.Header = header;
-            this.IsTopLevel = IsTopLevel;
+            this.IsTopLevel = isTopLevel;
         }
 
         public void Display()
@@ -54,6 +54,9 @@ namespace Arbitrader.Sandbox
         {
             if (key == 'x' || key == 'X')
                 throw new ArgumentException("x and X are reserved characters.");
+
+            if (this._menuOptions.Keys.Contains(key))
+                throw new InvalidOperationException($"Key {key} has already been assigned.");
 
             this._menuOptions.Add(key, menuOption);
         }

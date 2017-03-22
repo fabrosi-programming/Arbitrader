@@ -1,6 +1,7 @@
 ﻿CREATE TABLE [dbo].[ItemFlag]
 (
-	[ID] INT IDENTITY(1,1) NOT NULL PRIMARY KEY, 
-    [flagID] INT NULL, 
-    CONSTRAINT [FK_ItemFlag_Flag] FOREIGN KEY ([flagID]) REFERENCES [dbo].[Flag]([ID])
+	[pk] INT NOT NULL PRIMARY KEY, 
+    [flagPK] INT NULL, 
+	[loadDate] DATETIME2 NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT [FK_ItemFlag_Flag] FOREIGN KEY ([flagPK]) REFERENCES [dbo].[Flag]([pk])
 )

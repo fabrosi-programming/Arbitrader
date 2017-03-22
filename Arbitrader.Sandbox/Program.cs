@@ -11,21 +11,24 @@ namespace Arbitrader.Sandbox
 {
     public static class Program
     {
-        //static ManualResetEvent resetEvent = new ManualResetEvent(false);
-
         static void Main(string[] args)
         {
             var menu = new ConsoleMenu("Select an option:", true);
             menu.AddOption('r', new ConsoleMenu.MenuOption()
             {
                 Description = "Refresh trade and recipe data",
-                Action = () => RefreshDataFromAPI()
+                Action = () => RefreshDataFromAPI(false)
+            });
+            menu.AddOption('n', new ConsoleMenu.MenuOption()
+            {
+                Description = "Replace trade and recipe data",
+                Action = () => RefreshDataFromAPI(true)
             });
 
             menu.Display();
         }
 
-        private static void RefreshDataFromAPI()
+        private static void RefreshDataFromAPI(bool replace)
         {
             var context = new ItemContext();
             var client = new HttpClient();
@@ -34,14 +37,15 @@ namespace Arbitrader.Sandbox
             context.DataLoadFinished += (sender, e) => Console.WriteLine($"Finished loading data from resource \"{e.Resource}\"");
             context.DataLoadStatusUpdate += (sender, e) => Console.WriteLine($"Resource: {e.Resource}\t\tCount: {e.Count}");
 
-            var menu = new ConsoleMenu("Select data resource to refresh:");
+            var menu = new ConsoleMenu(replace ? "Select data resource to replace:" : "Select data resource to refresh:");
+            var action = replace ? "Replacing" : "Refreshing";
             menu.AddOption('i', new ConsoleMenu.MenuOption()
             {
                 Description = "Items",
                 Action = () =>
                 {
-                    Console.WriteLine("Refreshing item data...");
-                    context.InitializeAsync(client, ItemContext.Resource.Items).Wait();
+                    Console.WriteLine($"{action} item data...");
+                    context.Load(client, ItemContext.Resource.Items, replace);
                     Console.WriteLine("Done.");
                 }
             });
@@ -50,8 +54,8 @@ namespace Arbitrader.Sandbox
                 Description = "Recipes",
                 Action = () =>
                 {
-                    Console.WriteLine("Refreshing recipe data...");
-                    context.InitializeAsync(client, ItemContext.Resource.Recipes).Wait();
+                    Console.WriteLine($"{action} recipe data...");
+                    context.Load(client, ItemContext.Resource.Recipes, replace);
                     Console.WriteLine("Done.");
                 }
             });
@@ -60,9 +64,9 @@ namespace Arbitrader.Sandbox
                 Description = "All",
                 Action = () =>
                 {
-                    Console.WriteLine("Refreshing all data...");
-                    context.InitializeAsync(client, ItemContext.Resource.Items).Wait();
-                    context.InitializeAsync(client, ItemContext.Resource.Recipes).Wait();
+                    Console.WriteLine($"{action} all data...");
+                    context.Load(client, ItemContext.Resource.Items, replace);
+                    context.Load(client, ItemContext.Resource.Recipes, replace);
                     Console.WriteLine("Done.");
                 }
             });

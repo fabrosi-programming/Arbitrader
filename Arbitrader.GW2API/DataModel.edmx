@@ -7,73 +7,83 @@
       <Schema Namespace="ArbitraderModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012.Azure" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
         <EntityType Name="Discipline">
           <Key>
-            <PropertyRef Name="ID" />
+            <PropertyRef Name="pk" />
           </Key>
-          <Property Name="ID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="pk" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="name" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="loadDate" Type="datetime2" Precision="7" Nullable="false" />
         </EntityType>
         <EntityType Name="Flag">
           <Key>
-            <PropertyRef Name="ID" />
+            <PropertyRef Name="pk" />
           </Key>
-          <Property Name="ID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
-          <Property Name="Flag" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="pk" Type="int" Nullable="false" />
+          <Property Name="flag" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="loadDate" Type="datetime2" Precision="7" Nullable="false" />
         </EntityType>
         <EntityType Name="Ingredients">
           <Key>
-            <PropertyRef Name="ID" />
+            <PropertyRef Name="pk" />
           </Key>
-          <Property Name="ID" Type="int" Nullable="false" />
-          <Property Name="itemID" Type="int" Nullable="false" />
+          <Property Name="pk" Type="int" Nullable="false" />
+          <Property Name="id" Type="int" Nullable="false" />
+          <Property Name="itemPK" Type="int" Nullable="false" />
+          <Property Name="loadDate" Type="datetime2" Precision="7" Nullable="false" />
         </EntityType>
         <EntityType Name="Item">
           <Key>
-            <PropertyRef Name="ID" />
+            <PropertyRef Name="pk" />
           </Key>
-          <Property Name="ID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="pk" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="id" Type="int" Nullable="false" />
           <Property Name="name" Type="nvarchar" MaxLength="255" Nullable="false" />
           <Property Name="type" Type="nvarchar" MaxLength="50" />
           <Property Name="level" Type="int" Nullable="false" />
           <Property Name="rarity" Type="nvarchar" MaxLength="50" />
           <Property Name="vendor_value" Type="int" />
-          <Property Name="itemFlagID" Type="int" />
+          <Property Name="itemFlagPK" Type="int" />
           <Property Name="icon" Type="nvarchar" MaxLength="1023" />
+          <Property Name="loadDate" Type="datetime2" Precision="7" Nullable="false" />
         </EntityType>
         <EntityType Name="ItemFlag">
           <Key>
-            <PropertyRef Name="ID" />
+            <PropertyRef Name="pk" />
           </Key>
-          <Property Name="ID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
-          <Property Name="flagID" Type="int" />
+          <Property Name="pk" Type="int" Nullable="false" />
+          <Property Name="flagPK" Type="int" />
+          <Property Name="loadDate" Type="datetime2" Precision="7" Nullable="false" />
         </EntityType>
         <EntityType Name="Recipe">
           <Key>
-            <PropertyRef Name="ID" />
+            <PropertyRef Name="pk" />
           </Key>
-          <Property Name="ID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="pk" Type="int" Nullable="false" />
+          <Property Name="id" Type="int" Nullable="false" />
           <Property Name="type" Type="nvarchar" MaxLength="50" />
-          <Property Name="outputItemID" Type="int" Nullable="false" />
+          <Property Name="outputItemPK" Type="int" Nullable="false" />
           <Property Name="outputItemCount" Type="int" />
-          <Property Name="recipeDisciplineID" Type="int" Nullable="false" />
+          <Property Name="recipeDisciplinePK" Type="int" Nullable="false" />
           <Property Name="minRating" Type="int" />
-          <Property Name="ingredientsID" Type="int" Nullable="false" />
+          <Property Name="ingredientsPK" Type="int" Nullable="false" />
+          <Property Name="loadDate" Type="datetime2" Precision="7" Nullable="false" />
         </EntityType>
         <EntityType Name="RecipeDiscipline">
           <Key>
-            <PropertyRef Name="ID" />
+            <PropertyRef Name="pk" />
           </Key>
-          <Property Name="ID" Type="int" Nullable="false" />
-          <Property Name="disciplineID" Type="int" />
+          <Property Name="pk" Type="int" Nullable="false" />
+          <Property Name="id" Type="int" Nullable="false" />
+          <Property Name="disciplinePK" Type="int" />
         </EntityType>
         <Association Name="FK_Ingredients_Item">
           <End Role="Item" Type="Self.Item" Multiplicity="1" />
           <End Role="Ingredients" Type="Self.Ingredients" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Item">
-              <PropertyRef Name="ID" />
+              <PropertyRef Name="pk" />
             </Principal>
             <Dependent Role="Ingredients">
-              <PropertyRef Name="itemID" />
+              <PropertyRef Name="itemPK" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -82,10 +92,10 @@
           <End Role="Item" Type="Self.Item" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="ItemFlag">
-              <PropertyRef Name="ID" />
+              <PropertyRef Name="pk" />
             </Principal>
             <Dependent Role="Item">
-              <PropertyRef Name="itemFlagID" />
+              <PropertyRef Name="itemFlagPK" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -94,10 +104,10 @@
           <End Role="ItemFlag" Type="Self.ItemFlag" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Flag">
-              <PropertyRef Name="ID" />
+              <PropertyRef Name="pk" />
             </Principal>
             <Dependent Role="ItemFlag">
-              <PropertyRef Name="flagID" />
+              <PropertyRef Name="flagPK" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -106,22 +116,22 @@
           <End Role="Recipe" Type="Self.Recipe" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Ingredients">
-              <PropertyRef Name="ID" />
+              <PropertyRef Name="pk" />
             </Principal>
             <Dependent Role="Recipe">
-              <PropertyRef Name="ingredientsID" />
+              <PropertyRef Name="ingredientsPK" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_Recipe_Item_outputItemID">
+        <Association Name="FK_Recipe_Item_outputItemPK">
           <End Role="Item" Type="Self.Item" Multiplicity="1" />
           <End Role="Recipe" Type="Self.Recipe" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Item">
-              <PropertyRef Name="ID" />
+              <PropertyRef Name="pk" />
             </Principal>
             <Dependent Role="Recipe">
-              <PropertyRef Name="outputItemID" />
+              <PropertyRef Name="outputItemPK" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -130,10 +140,10 @@
           <End Role="Recipe" Type="Self.Recipe" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="RecipeDiscipline">
-              <PropertyRef Name="ID" />
+              <PropertyRef Name="pk" />
             </Principal>
             <Dependent Role="Recipe">
-              <PropertyRef Name="recipeDisciplineID" />
+              <PropertyRef Name="recipeDisciplinePK" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -142,10 +152,10 @@
           <End Role="RecipeDiscipline" Type="Self.RecipeDiscipline" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Discipline">
-              <PropertyRef Name="ID" />
+              <PropertyRef Name="pk" />
             </Principal>
             <Dependent Role="RecipeDiscipline">
-              <PropertyRef Name="disciplineID" />
+              <PropertyRef Name="disciplinePK" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -173,7 +183,7 @@
             <End Role="Ingredients" EntitySet="Ingredients" />
             <End Role="Recipe" EntitySet="Recipe" />
           </AssociationSet>
-          <AssociationSet Name="FK_Recipe_Item_outputItemID" Association="Self.FK_Recipe_Item_outputItemID">
+          <AssociationSet Name="FK_Recipe_Item_outputItemPK" Association="Self.FK_Recipe_Item_outputItemPK">
             <End Role="Item" EntitySet="Item" />
             <End Role="Recipe" EntitySet="Recipe" />
           </AssociationSet>
@@ -193,75 +203,85 @@
       <Schema Namespace="ArbitraderModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
         <EntityType Name="Discipline">
           <Key>
-            <PropertyRef Name="ID" />
+            <PropertyRef Name="pk" />
           </Key>
-          <Property Name="ID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="pk" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Name="name" Type="String" MaxLength="50" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="loadDate" Type="DateTime" Nullable="false" Precision="7" />
           <NavigationProperty Name="RecipeDisciplines" Relationship="Self.FK_RecipeDiscipline_Discipline" FromRole="Discipline" ToRole="RecipeDiscipline" />
         </EntityType>
         <EntityType Name="Flag">
           <Key>
-            <PropertyRef Name="ID" />
+            <PropertyRef Name="pk" />
           </Key>
-          <Property Name="ID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="Flag1" Type="String" MaxLength="50" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="pk" Type="Int32" Nullable="false" />
+          <Property Name="flag1" Type="String" MaxLength="50" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="loadDate" Type="DateTime" Nullable="false" Precision="7" />
           <NavigationProperty Name="ItemFlags" Relationship="Self.FK_ItemFlag_Flag" FromRole="Flag" ToRole="ItemFlag" />
         </EntityType>
         <EntityType Name="Ingredient">
           <Key>
-            <PropertyRef Name="ID" />
+            <PropertyRef Name="pk" />
           </Key>
-          <Property Name="ID" Type="Int32" Nullable="false" />
-          <Property Name="itemID" Type="Int32" Nullable="false" />
+          <Property Name="pk" Type="Int32" Nullable="false" />
+          <Property Name="id" Type="Int32" Nullable="false" />
+          <Property Name="itemPK" Type="Int32" Nullable="false" />
+          <Property Name="loadDate" Type="DateTime" Nullable="false" Precision="7" />
           <NavigationProperty Name="Item" Relationship="Self.FK_Ingredients_Item" FromRole="Ingredients" ToRole="Item" />
           <NavigationProperty Name="Recipes" Relationship="Self.FK_Recipe_Ingredients" FromRole="Ingredients" ToRole="Recipe" />
         </EntityType>
         <EntityType Name="Item">
           <Key>
-            <PropertyRef Name="ID" />
+            <PropertyRef Name="pk" />
           </Key>
-          <Property Name="ID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="pk" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="id" Type="Int32" Nullable="false" />
           <Property Name="name" Type="String" MaxLength="255" FixedLength="false" Unicode="true" Nullable="false" />
           <Property Name="type" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
           <Property Name="level" Type="Int32" Nullable="false" />
           <Property Name="rarity" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
           <Property Name="vendor_value" Type="Int32" />
-          <Property Name="itemFlagID" Type="Int32" />
+          <Property Name="itemFlagPK" Type="Int32" />
           <Property Name="icon" Type="String" MaxLength="1023" FixedLength="false" Unicode="true" />
+          <Property Name="loadDate" Type="DateTime" Nullable="false" Precision="7" />
           <NavigationProperty Name="Ingredients" Relationship="Self.FK_Ingredients_Item" FromRole="Item" ToRole="Ingredients" />
           <NavigationProperty Name="ItemFlag" Relationship="Self.FK_Item_ItemFlag" FromRole="Item" ToRole="ItemFlag" />
-          <NavigationProperty Name="Recipes" Relationship="Self.FK_Recipe_Item_outputItemID" FromRole="Item" ToRole="Recipe" />
+          <NavigationProperty Name="Recipes" Relationship="Self.FK_Recipe_Item_outputItemPK" FromRole="Item" ToRole="Recipe" />
         </EntityType>
         <EntityType Name="ItemFlag">
           <Key>
-            <PropertyRef Name="ID" />
+            <PropertyRef Name="pk" />
           </Key>
-          <Property Name="ID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="flagID" Type="Int32" />
+          <Property Name="pk" Type="Int32" Nullable="false" />
+          <Property Name="flagPK" Type="Int32" />
+          <Property Name="loadDate" Type="DateTime" Nullable="false" Precision="7" />
           <NavigationProperty Name="Flag" Relationship="Self.FK_ItemFlag_Flag" FromRole="ItemFlag" ToRole="Flag" />
           <NavigationProperty Name="Items" Relationship="Self.FK_Item_ItemFlag" FromRole="ItemFlag" ToRole="Item" />
         </EntityType>
         <EntityType Name="Recipe">
           <Key>
-            <PropertyRef Name="ID" />
+            <PropertyRef Name="pk" />
           </Key>
-          <Property Name="ID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="pk" Type="Int32" Nullable="false" />
+          <Property Name="id" Type="Int32" Nullable="false" />
           <Property Name="type" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
-          <Property Name="outputItemID" Type="Int32" Nullable="false" />
+          <Property Name="outputItemPK" Type="Int32" Nullable="false" />
           <Property Name="outputItemCount" Type="Int32" />
-          <Property Name="recipeDisciplineID" Type="Int32" Nullable="false" />
+          <Property Name="recipeDisciplinePK" Type="Int32" Nullable="false" />
           <Property Name="minRating" Type="Int32" />
-          <Property Name="ingredientsID" Type="Int32" Nullable="false" />
+          <Property Name="ingredientsPK" Type="Int32" Nullable="false" />
+          <Property Name="loadDate" Type="DateTime" Nullable="false" Precision="7" />
           <NavigationProperty Name="Ingredient" Relationship="Self.FK_Recipe_Ingredients" FromRole="Recipe" ToRole="Ingredients" />
-          <NavigationProperty Name="Item" Relationship="Self.FK_Recipe_Item_outputItemID" FromRole="Recipe" ToRole="Item" />
+          <NavigationProperty Name="Item" Relationship="Self.FK_Recipe_Item_outputItemPK" FromRole="Recipe" ToRole="Item" />
           <NavigationProperty Name="RecipeDiscipline" Relationship="Self.FK_Recipe_RecipeDiscipline" FromRole="Recipe" ToRole="RecipeDiscipline" />
         </EntityType>
         <EntityType Name="RecipeDiscipline">
           <Key>
-            <PropertyRef Name="ID" />
+            <PropertyRef Name="pk" />
           </Key>
-          <Property Name="ID" Type="Int32" Nullable="false" />
-          <Property Name="disciplineID" Type="Int32" />
+          <Property Name="pk" Type="Int32" Nullable="false" />
+          <Property Name="id" Type="Int32" Nullable="false" />
+          <Property Name="disciplinePK" Type="Int32" />
           <NavigationProperty Name="Discipline" Relationship="Self.FK_RecipeDiscipline_Discipline" FromRole="RecipeDiscipline" ToRole="Discipline" />
           <NavigationProperty Name="Recipes" Relationship="Self.FK_Recipe_RecipeDiscipline" FromRole="RecipeDiscipline" ToRole="Recipe" />
         </EntityType>
@@ -270,10 +290,10 @@
           <End Role="RecipeDiscipline" Type="Self.RecipeDiscipline" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Discipline">
-              <PropertyRef Name="ID" />
+              <PropertyRef Name="pk" />
             </Principal>
             <Dependent Role="RecipeDiscipline">
-              <PropertyRef Name="disciplineID" />
+              <PropertyRef Name="disciplinePK" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -282,10 +302,10 @@
           <End Role="ItemFlag" Type="Self.ItemFlag" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Flag">
-              <PropertyRef Name="ID" />
+              <PropertyRef Name="pk" />
             </Principal>
             <Dependent Role="ItemFlag">
-              <PropertyRef Name="flagID" />
+              <PropertyRef Name="flagPK" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -294,10 +314,10 @@
           <End Role="Ingredients" Type="Self.Ingredient" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Item">
-              <PropertyRef Name="ID" />
+              <PropertyRef Name="pk" />
             </Principal>
             <Dependent Role="Ingredients">
-              <PropertyRef Name="itemID" />
+              <PropertyRef Name="itemPK" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -306,10 +326,10 @@
           <End Role="Recipe" Type="Self.Recipe" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Ingredients">
-              <PropertyRef Name="ID" />
+              <PropertyRef Name="pk" />
             </Principal>
             <Dependent Role="Recipe">
-              <PropertyRef Name="ingredientsID" />
+              <PropertyRef Name="ingredientsPK" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -318,22 +338,22 @@
           <End Role="Item" Type="Self.Item" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="ItemFlag">
-              <PropertyRef Name="ID" />
+              <PropertyRef Name="pk" />
             </Principal>
             <Dependent Role="Item">
-              <PropertyRef Name="itemFlagID" />
+              <PropertyRef Name="itemFlagPK" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_Recipe_Item_outputItemID">
+        <Association Name="FK_Recipe_Item_outputItemPK">
           <End Role="Item" Type="Self.Item" Multiplicity="1" />
           <End Role="Recipe" Type="Self.Recipe" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Item">
-              <PropertyRef Name="ID" />
+              <PropertyRef Name="pk" />
             </Principal>
             <Dependent Role="Recipe">
-              <PropertyRef Name="outputItemID" />
+              <PropertyRef Name="outputItemPK" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -342,10 +362,10 @@
           <End Role="Recipe" Type="Self.Recipe" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="RecipeDiscipline">
-              <PropertyRef Name="ID" />
+              <PropertyRef Name="pk" />
             </Principal>
             <Dependent Role="Recipe">
-              <PropertyRef Name="recipeDisciplineID" />
+              <PropertyRef Name="recipeDisciplinePK" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -377,7 +397,7 @@
             <End Role="ItemFlag" EntitySet="ItemFlags" />
             <End Role="Item" EntitySet="Items" />
           </AssociationSet>
-          <AssociationSet Name="FK_Recipe_Item_outputItemID" Association="Self.FK_Recipe_Item_outputItemID">
+          <AssociationSet Name="FK_Recipe_Item_outputItemPK" Association="Self.FK_Recipe_Item_outputItemPK">
             <End Role="Item" EntitySet="Items" />
             <End Role="Recipe" EntitySet="Recipes" />
           </AssociationSet>
@@ -395,67 +415,77 @@
           <EntitySetMapping Name="Disciplines">
             <EntityTypeMapping TypeName="ArbitraderModel.Discipline">
               <MappingFragment StoreEntitySet="Discipline">
-                <ScalarProperty Name="ID" ColumnName="ID" />
+                <ScalarProperty Name="pk" ColumnName="pk" />
                 <ScalarProperty Name="name" ColumnName="name" />
+                <ScalarProperty Name="loadDate" ColumnName="loadDate" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Flags">
             <EntityTypeMapping TypeName="ArbitraderModel.Flag">
               <MappingFragment StoreEntitySet="Flag">
-                <ScalarProperty Name="ID" ColumnName="ID" />
-                <ScalarProperty Name="Flag1" ColumnName="Flag" />
+                <ScalarProperty Name="pk" ColumnName="pk" />
+                <ScalarProperty Name="flag1" ColumnName="flag" />
+                <ScalarProperty Name="loadDate" ColumnName="loadDate" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Ingredients">
             <EntityTypeMapping TypeName="ArbitraderModel.Ingredient">
               <MappingFragment StoreEntitySet="Ingredients">
-                <ScalarProperty Name="ID" ColumnName="ID" />
-                <ScalarProperty Name="itemID" ColumnName="itemID" />
+                <ScalarProperty Name="pk" ColumnName="pk" />
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="itemPK" ColumnName="itemPK" />
+                <ScalarProperty Name="loadDate" ColumnName="loadDate" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Items">
             <EntityTypeMapping TypeName="ArbitraderModel.Item">
               <MappingFragment StoreEntitySet="Item">
-                <ScalarProperty Name="ID" ColumnName="ID" />
+                <ScalarProperty Name="pk" ColumnName="pk" />
+                <ScalarProperty Name="id" ColumnName="id" />
                 <ScalarProperty Name="name" ColumnName="name" />
                 <ScalarProperty Name="type" ColumnName="type" />
                 <ScalarProperty Name="level" ColumnName="level" />
                 <ScalarProperty Name="rarity" ColumnName="rarity" />
                 <ScalarProperty Name="vendor_value" ColumnName="vendor_value" />
-                <ScalarProperty Name="itemFlagID" ColumnName="itemFlagID" />
+                <ScalarProperty Name="itemFlagPK" ColumnName="itemFlagPK" />
                 <ScalarProperty Name="icon" ColumnName="icon" />
+                <ScalarProperty Name="loadDate" ColumnName="loadDate" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="ItemFlags">
             <EntityTypeMapping TypeName="ArbitraderModel.ItemFlag">
               <MappingFragment StoreEntitySet="ItemFlag">
-                <ScalarProperty Name="ID" ColumnName="ID" />
-                <ScalarProperty Name="flagID" ColumnName="flagID" />
+                <ScalarProperty Name="pk" ColumnName="pk" />
+                <ScalarProperty Name="flagPK" ColumnName="flagPK" />
+                <ScalarProperty Name="loadDate" ColumnName="loadDate" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Recipes">
             <EntityTypeMapping TypeName="ArbitraderModel.Recipe">
               <MappingFragment StoreEntitySet="Recipe">
-                <ScalarProperty Name="ID" ColumnName="ID" />
+                <ScalarProperty Name="pk" ColumnName="pk" />
+                <ScalarProperty Name="id" ColumnName="id" />
                 <ScalarProperty Name="type" ColumnName="type" />
-                <ScalarProperty Name="outputItemID" ColumnName="outputItemID" />
+                <ScalarProperty Name="outputItemPK" ColumnName="outputItemPK" />
                 <ScalarProperty Name="outputItemCount" ColumnName="outputItemCount" />
-                <ScalarProperty Name="recipeDisciplineID" ColumnName="recipeDisciplineID" />
+                <ScalarProperty Name="recipeDisciplinePK" ColumnName="recipeDisciplinePK" />
                 <ScalarProperty Name="minRating" ColumnName="minRating" />
-                <ScalarProperty Name="ingredientsID" ColumnName="ingredientsID" />
+                <ScalarProperty Name="ingredientsPK" ColumnName="ingredientsPK" />
+                <ScalarProperty Name="loadDate" ColumnName="loadDate" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="RecipeDisciplines">
             <EntityTypeMapping TypeName="ArbitraderModel.RecipeDiscipline">
               <MappingFragment StoreEntitySet="RecipeDiscipline">
-                <ScalarProperty Name="ID" ColumnName="ID" />
-                <ScalarProperty Name="disciplineID" ColumnName="disciplineID" />
+                <ScalarProperty Name="pk" ColumnName="pk" />
+                <ScalarProperty Name="id" ColumnName="id" />
+                <ScalarProperty Name="disciplinePK" ColumnName="disciplinePK" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

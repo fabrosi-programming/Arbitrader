@@ -56,27 +56,29 @@ namespace Arbitrader.GW2API
         private static readonly string _itemsResource = "items";
         private static readonly string _recipesResource = "recipes";
 
-        private int _updateInterval = 1000;
+        private int _updateInterval = 100;
 
-        public ItemContext(int updateInterval = 1000)
+        public ItemContext(int updateInterval = 100)
         {
             this._updateInterval = updateInterval;
         }
 
-        public async Task InitializeAsync(HttpClient client, Resource resource)
+        public void Load(HttpClient client, Resource resource, bool replace)
         {
             this.InitializeHttpClient(client);
 
             var entities = new ArbitraderEntities();
-            await DeleteExistingDataAsync(entities);
+
+            if (replace)
+                this.DeleteExistingData(entities);
 
             switch (resource)
             {
                 case Resource.Items:
-                    await this.UploadToDatabaseAsync<Item>(client, _itemsResource, entities.Items, entities);
+                    this.UploadToDatabase<Item>(client, _itemsResource, entities.Items, entities);
                     break;
                 case Resource.Recipes:
-                    await this.UploadToDatabaseAsync<Recipe>(client, _recipesResource, entities.Recipes, entities);
+                    this.UploadToDatabase<Recipe>(client, _recipesResource, entities.Recipes, entities);
                     break;
                 default:
                     break;
@@ -89,38 +91,41 @@ namespace Arbitrader.GW2API
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
-        private async Task DeleteExistingDataAsync(ArbitraderEntities entities)
+        private void DeleteExistingData(ArbitraderEntities entities)
         {
-            await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[Flag]");
-            await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[ItemFlag]");
-            await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[Item]");
-            
-            await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[Discipline]");
-            await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[RecipeDiscipline]");
-            await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[Ingredients]");
-            await entities.Database.ExecuteSqlCommandAsync("DELETE FROM [dbo].[Recipe]");
+            var tableNames = new Dictionary<int, string>()
+            {
+                { 0, "Flag" },
+                { 1, "ItemFlag" },
+                { 2, "Item" },
+                { 3, "Discipline" },
+                { 4, "RecipeDiscipline" },
+                { 5, "Ingredients" },
+                { 6, "Recipe" }
+            };
+
+            foreach (var table in tableNames.OrderBy(kvp => kvp.Key))
+                entities.Database.ExecuteSqlCommand($"DELETE FROM [dbo].[{table.Value}]");
         }
 
-        private async Task UploadToDatabaseAsync<T>(HttpClient client, string resource, DbSet<T> targetDataSet, ArbitraderEntities entities) where T : class
+        private void UploadToDatabase<T>(HttpClient client, string resource, DbSet<T> targetDataSet, ArbitraderEntities entities) where T : class
         {
-            List<int> ids = new List<int>();
-
             var baseURL = Settings.Default.APIBaseURL;
             var listURL = $"{baseURL}/{resource}";
-            var response = await client.GetAsync(listURL);
+            var response = client.GetAsync(listURL).Result;
 
-            if (response.IsSuccessStatusCode)
-                ids = await response.Content.ReadAsAsync<List<int>>();
+            if (!response.IsSuccessStatusCode)
+                return;
 
-            
-            this.OnDataLoadStarted(new DataLoadEventArgs(resource, ids.Count));
+            var queryableDbSet = (IQueryable<ICanHazID>)targetDataSet;
+            var existingIds = (from row in queryableDbSet
+                               select row.id).ToList();
+            var unfilteredIds = response.Content.ReadAsAsync<List<int>>().Result;
+            var ids = from id in unfilteredIds
+                      where !existingIds.Contains(id)
+                      select id;
 
-#if DEBUG
-            // limit to 100 items for testing
-            ids = (from id in ids
-                   where ids.IndexOf(id) < 100
-                   select id).ToList();
-#endif
+            this.OnDataLoadStarted(new DataLoadEventArgs(resource, ids.Count()));
 
             var count = 0;
 
@@ -129,22 +134,22 @@ namespace Arbitrader.GW2API
                 count += 1;
 
                 var singleResultURL = $"{listURL}/{id}";
-                var singleResultResponse = await client.GetAsync(singleResultURL);
+                var singleResultResponse = client.GetAsync(singleResultURL).Result;
 
                 if (singleResultResponse.IsSuccessStatusCode)
                 {
-                    var result = await singleResultResponse.Content.ReadAsAsync<T>();
+                    var result = singleResultResponse.Content.ReadAsAsync<T>().Result;
                     targetDataSet.Add(result);
                 }
 
                 if (count % _updateInterval == 0)
                 {
-                    await Task.Run(() => entities.SaveChanges());
+                    entities.SaveChanges();
                     this.OnDataLoadStatusUpdate(new DataLoadEventArgs(resource, count));
                 }
             }
 
-            await Task.Run(() => entities.SaveChanges());
+            entities.SaveChanges();
 
             this.OnDataLoadFinished(new DataLoadEventArgs(resource, null));
         }

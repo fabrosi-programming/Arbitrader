@@ -21,14 +21,16 @@ namespace Arbitrader.GW2API
             this.Recipes = new HashSet<Recipe>();
         }
     
-        public int ID { get; set; }
+        public int pk { get; set; }
+        public int id { get; set; }
         public string name { get; set; }
         public string type { get; set; }
         public int level { get; set; }
         public string rarity { get; set; }
         public Nullable<int> vendor_value { get; set; }
-        public Nullable<int> itemFlagID { get; set; }
+        public Nullable<int> itemFlagPK { get; set; }
         public string icon { get; set; }
+        public System.DateTime loadDate { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Ingredient> Ingredients { get; set; }
