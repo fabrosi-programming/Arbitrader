@@ -9,6 +9,5 @@
     [vendor_value] INT NULL, 
     [itemFlagPK] INT NULL, 
     [icon] NVARCHAR(1023) NULL, 
-	[loadDate] DATETIME2 NOT NULL DEFAULT GETDATE(),
-    CONSTRAINT [FK_Item_ItemFlag] FOREIGN KEY ([itemFlagPK]) REFERENCES [dbo].[ItemFlag]([pk])
+	[loadDate] DATETIME2 NOT NULL DEFAULT GETDATE()
 )

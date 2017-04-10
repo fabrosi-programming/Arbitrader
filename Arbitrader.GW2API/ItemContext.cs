@@ -151,7 +151,7 @@ namespace Arbitrader.GW2API
                 if (count % _updateInterval == 0)
                 {
                     this.SaveChanges(resource, targetDataSet, entities, result);
-
+                    
                     this.OnDataLoadStatusUpdate(new DataLoadEventArgs(resource, count));
                 }
             }

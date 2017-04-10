@@ -11,14 +11,14 @@
         <EntityTypeShape EntityType="ArbitraderModel.Item" Width="1.5" PointX="5.25" PointY="1" IsExpanded="true" />
         <EntityTypeShape EntityType="ArbitraderModel.ItemFlag" Width="1.5" PointX="3" PointY="1.75" IsExpanded="true" />
         <EntityTypeShape EntityType="ArbitraderModel.Recipe" Width="1.5" PointX="9.75" PointY="1.125" IsExpanded="true" />
-        <EntityTypeShape EntityType="ArbitraderModel.RecipeDiscipline" Width="1.5" PointX="7.5" PointY="5.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="ArbitraderModel.RecipeDiscipline" Width="1.5" PointX="9.75" PointY="5.5" IsExpanded="true" />
         <AssociationConnector Association="ArbitraderModel.FK_RecipeDiscipline_Discipline" ManuallyRouted="false" />
         <AssociationConnector Association="ArbitraderModel.FK_ItemFlag_Flag" ManuallyRouted="false" />
         <AssociationConnector Association="ArbitraderModel.FK_Ingredients_Item" ManuallyRouted="false" />
-        <AssociationConnector Association="ArbitraderModel.FK_Recipe_Ingredients" ManuallyRouted="false" />
-        <AssociationConnector Association="ArbitraderModel.FK_Item_ItemFlag" ManuallyRouted="false" />
         <AssociationConnector Association="ArbitraderModel.FK_Recipe_Item_outputItemPK" ManuallyRouted="false" />
         <AssociationConnector Association="ArbitraderModel.FK_RecipeDiscipline_Recipe" />
+        <AssociationConnector Association="ArbitraderModel.FK_Ingredients_Recipe" />
+        <AssociationConnector Association="ArbitraderModel.FK_ItemFlag_Item" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

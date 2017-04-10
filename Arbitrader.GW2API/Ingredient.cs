@@ -14,19 +14,13 @@ namespace Arbitrader.GW2API
     
     public partial class Ingredient
     {
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public Ingredient()
-        {
-            this.Recipes = new HashSet<Recipe>();
-        }
-    
         public int pk { get; set; }
         public int id { get; set; }
         public int itemPK { get; set; }
         public System.DateTime loadDate { get; set; }
+        public int recipePK { get; set; }
     
         public virtual Item Item { get; set; }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Recipe> Recipes { get; set; }
+        public virtual Recipe Recipe { get; set; }
     }
 }

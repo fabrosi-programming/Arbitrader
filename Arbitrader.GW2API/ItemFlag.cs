@@ -14,18 +14,12 @@ namespace Arbitrader.GW2API
     
     public partial class ItemFlag
     {
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public ItemFlag()
-        {
-            this.Items = new HashSet<Item>();
-        }
-    
         public int pk { get; set; }
         public Nullable<int> flagPK { get; set; }
         public System.DateTime loadDate { get; set; }
+        public Nullable<int> itemPK { get; set; }
     
         public virtual Flag Flag { get; set; }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Item> Items { get; set; }
+        public virtual Item Item { get; set; }
     }
 }

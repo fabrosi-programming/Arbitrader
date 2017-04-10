@@ -76,6 +76,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>DataModel.edmx</DependentUpon>
     </Compile>
+    <Compile Include="DataModel\Discipline.cs" />
     <Compile Include="DataModel\Item.cs" />
     <Compile Include="DataModel\Recipe.cs" />
     <Compile Include="Discipline.cs">

@@ -19,6 +19,7 @@ namespace Arbitrader.GW2API
         {
             this.Ingredients = new HashSet<Ingredient>();
             this.Recipes = new HashSet<Recipe>();
+            this.ItemFlags = new HashSet<ItemFlag>();
         }
     
         public int pk { get; set; }
@@ -28,14 +29,14 @@ namespace Arbitrader.GW2API
         public int level { get; set; }
         public string rarity { get; set; }
         public Nullable<int> vendor_value { get; set; }
-        public Nullable<int> itemFlagPK { get; set; }
         public string icon { get; set; }
         public System.DateTime loadDate { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Ingredient> Ingredients { get; set; }
-        public virtual ItemFlag ItemFlag { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Recipe> Recipes { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<ItemFlag> ItemFlags { get; set; }
     }
 }
