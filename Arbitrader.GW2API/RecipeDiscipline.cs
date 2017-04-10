@@ -14,18 +14,12 @@ namespace Arbitrader.GW2API
     
     public partial class RecipeDiscipline
     {
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public RecipeDiscipline()
-        {
-            this.Recipes = new HashSet<Recipe>();
-        }
-    
         public int pk { get; set; }
         public int id { get; set; }
-        public Nullable<int> disciplinePK { get; set; }
+        public int disciplinePK { get; set; }
+        public int recipePK { get; set; }
     
         public virtual Discipline Discipline { get; set; }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<Recipe> Recipes { get; set; }
+        public virtual Recipe Recipe { get; set; }
     }
 }

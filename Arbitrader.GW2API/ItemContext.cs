@@ -9,6 +9,7 @@ using System.Net.Http.Headers;
 using System.Threading;
 using Arbitrader.GW2API.Properties;
 using System.Data.Entity;
+using System.Data.Entity.Infrastructure;
 
 namespace Arbitrader.GW2API
 {
@@ -19,11 +20,13 @@ namespace Arbitrader.GW2API
         {
             public string Resource { get; set; }
             public int? Count { get; set; }
+            public string Message { get; set; }
 
-            public DataLoadEventArgs(string resource, int? count)
+            public DataLoadEventArgs(string resource, int? count = null, string message = null)
             {
                 this.Resource = resource;
                 this.Count = count;
+                this.Message = message;
             }
         }
 
@@ -57,10 +60,12 @@ namespace Arbitrader.GW2API
         private static readonly string _recipesResource = "recipes";
 
         private int _updateInterval = 100;
+        private bool _continueOnError = true;
 
-        public ItemContext(int updateInterval = 100)
+        public ItemContext(int updateInterval = 100, bool continueOnError = true)
         {
             this._updateInterval = updateInterval;
+            this._continueOnError = continueOnError;
         }
 
         public void Load(HttpClient client, Resource resource, bool replace)
@@ -128,6 +133,7 @@ namespace Arbitrader.GW2API
             this.OnDataLoadStarted(new DataLoadEventArgs(resource, ids.Count()));
 
             var count = 0;
+            T result = null;
 
             foreach (var id in ids)
             {
@@ -138,20 +144,49 @@ namespace Arbitrader.GW2API
 
                 if (singleResultResponse.IsSuccessStatusCode)
                 {
-                    var result = singleResultResponse.Content.ReadAsAsync<T>().Result;
+                    result = singleResultResponse.Content.ReadAsAsync<T>().Result;
                     targetDataSet.Add(result);
                 }
 
                 if (count % _updateInterval == 0)
                 {
-                    entities.SaveChanges();
+                    this.SaveChanges(resource, targetDataSet, entities, result);
+
                     this.OnDataLoadStatusUpdate(new DataLoadEventArgs(resource, count));
                 }
             }
 
-            entities.SaveChanges();
+            this.SaveChanges(resource, targetDataSet, entities, result);
 
             this.OnDataLoadFinished(new DataLoadEventArgs(resource, null));
+        }
+
+        private void SaveChanges<T>(string resource, DbSet<T> targetDataSet, ArbitraderEntities entities, T result) where T : class
+        {
+            try
+            {
+                entities.SaveChanges();
+            }
+            catch (DbUpdateException e)
+            {
+                var message = $"Error saving changes for resource \"{resource}\". Exception message: {e.Message}";
+
+                if (e.InnerException != null)
+                    message += $" First sub-exception message: {e.InnerException.Message}";
+
+                if (e.InnerException.InnerException != null)
+                    message += $" Second sub-exception message: {e.InnerException.InnerException.Message}";
+
+                message += $" : {e.StackTrace}";
+
+                this.OnDataLoadStatusUpdate(new DataLoadEventArgs(resource, null, message));
+
+                if (result != null)
+                    targetDataSet.Remove(result);
+
+                if (!this._continueOnError)
+                    throw;
+            }
         }
     }
 }

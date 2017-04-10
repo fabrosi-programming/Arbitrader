@@ -4,7 +4,7 @@
   <edmx:Runtime>
     <!-- SSDL content -->
     <edmx:StorageModels>
-      <Schema Namespace="ArbitraderModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012.Azure" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+    <Schema Namespace="ArbitraderModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012.Azure" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
         <EntityType Name="Discipline">
           <Key>
             <PropertyRef Name="pk" />
@@ -62,7 +62,6 @@
           <Property Name="type" Type="nvarchar" MaxLength="50" />
           <Property Name="outputItemPK" Type="int" Nullable="false" />
           <Property Name="outputItemCount" Type="int" />
-          <Property Name="recipeDisciplinePK" Type="int" Nullable="false" />
           <Property Name="minRating" Type="int" />
           <Property Name="ingredientsPK" Type="int" Nullable="false" />
           <Property Name="loadDate" Type="datetime2" Precision="7" Nullable="false" />
@@ -73,7 +72,8 @@
           </Key>
           <Property Name="pk" Type="int" Nullable="false" />
           <Property Name="id" Type="int" Nullable="false" />
-          <Property Name="disciplinePK" Type="int" />
+          <Property Name="recipePK" Type="int" Nullable="false" />
+          <Property Name="disciplinePK" Type="int" Nullable="false" />
         </EntityType>
         <Association Name="FK_Ingredients_Item">
           <End Role="Item" Type="Self.Item" Multiplicity="1" />
@@ -135,20 +135,8 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_Recipe_RecipeDiscipline">
-          <End Role="RecipeDiscipline" Type="Self.RecipeDiscipline" Multiplicity="1" />
-          <End Role="Recipe" Type="Self.Recipe" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="RecipeDiscipline">
-              <PropertyRef Name="pk" />
-            </Principal>
-            <Dependent Role="Recipe">
-              <PropertyRef Name="recipeDisciplinePK" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
         <Association Name="FK_RecipeDiscipline_Discipline">
-          <End Role="Discipline" Type="Self.Discipline" Multiplicity="0..1" />
+          <End Role="Discipline" Type="Self.Discipline" Multiplicity="1" />
           <End Role="RecipeDiscipline" Type="Self.RecipeDiscipline" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Discipline">
@@ -156,6 +144,18 @@
             </Principal>
             <Dependent Role="RecipeDiscipline">
               <PropertyRef Name="disciplinePK" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RecipeDiscipline_Recipe">
+          <End Role="Recipe" Type="Self.Recipe" Multiplicity="1" />
+          <End Role="RecipeDiscipline" Type="Self.RecipeDiscipline" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Recipe">
+              <PropertyRef Name="pk" />
+            </Principal>
+            <Dependent Role="RecipeDiscipline">
+              <PropertyRef Name="recipePK" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -187,17 +187,16 @@
             <End Role="Item" EntitySet="Item" />
             <End Role="Recipe" EntitySet="Recipe" />
           </AssociationSet>
-          <AssociationSet Name="FK_Recipe_RecipeDiscipline" Association="Self.FK_Recipe_RecipeDiscipline">
-            <End Role="RecipeDiscipline" EntitySet="RecipeDiscipline" />
-            <End Role="Recipe" EntitySet="Recipe" />
-          </AssociationSet>
           <AssociationSet Name="FK_RecipeDiscipline_Discipline" Association="Self.FK_RecipeDiscipline_Discipline">
             <End Role="Discipline" EntitySet="Discipline" />
             <End Role="RecipeDiscipline" EntitySet="RecipeDiscipline" />
           </AssociationSet>
+          <AssociationSet Name="FK_RecipeDiscipline_Recipe" Association="Self.FK_RecipeDiscipline_Recipe">
+            <End Role="Recipe" EntitySet="Recipe" />
+            <End Role="RecipeDiscipline" EntitySet="RecipeDiscipline" />
+          </AssociationSet>
         </EntityContainer>
-      </Schema>
-    </edmx:StorageModels>
+      </Schema></edmx:StorageModels>
     <!-- CSDL content -->
     <edmx:ConceptualModels>
       <Schema Namespace="ArbitraderModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
@@ -267,13 +266,12 @@
           <Property Name="type" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
           <Property Name="outputItemPK" Type="Int32" Nullable="false" />
           <Property Name="outputItemCount" Type="Int32" />
-          <Property Name="recipeDisciplinePK" Type="Int32" Nullable="false" />
           <Property Name="minRating" Type="Int32" />
           <Property Name="ingredientsPK" Type="Int32" Nullable="false" />
           <Property Name="loadDate" Type="DateTime" Nullable="false" Precision="7" />
           <NavigationProperty Name="Ingredient" Relationship="Self.FK_Recipe_Ingredients" FromRole="Recipe" ToRole="Ingredients" />
           <NavigationProperty Name="Item" Relationship="Self.FK_Recipe_Item_outputItemPK" FromRole="Recipe" ToRole="Item" />
-          <NavigationProperty Name="RecipeDiscipline" Relationship="Self.FK_Recipe_RecipeDiscipline" FromRole="Recipe" ToRole="RecipeDiscipline" />
+          <NavigationProperty Name="RecipeDisciplines" Relationship="ArbitraderModel.FK_RecipeDiscipline_Recipe" FromRole="Recipe" ToRole="RecipeDiscipline" />
         </EntityType>
         <EntityType Name="RecipeDiscipline">
           <Key>
@@ -281,12 +279,13 @@
           </Key>
           <Property Name="pk" Type="Int32" Nullable="false" />
           <Property Name="id" Type="Int32" Nullable="false" />
-          <Property Name="disciplinePK" Type="Int32" />
+          <Property Name="disciplinePK" Type="Int32" Nullable="false" />
           <NavigationProperty Name="Discipline" Relationship="Self.FK_RecipeDiscipline_Discipline" FromRole="RecipeDiscipline" ToRole="Discipline" />
-          <NavigationProperty Name="Recipes" Relationship="Self.FK_Recipe_RecipeDiscipline" FromRole="RecipeDiscipline" ToRole="Recipe" />
+          <Property Name="recipePK" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="Recipe" Relationship="ArbitraderModel.FK_RecipeDiscipline_Recipe" FromRole="RecipeDiscipline" ToRole="Recipe" />
         </EntityType>
         <Association Name="FK_RecipeDiscipline_Discipline">
-          <End Role="Discipline" Type="Self.Discipline" Multiplicity="0..1" />
+          <End Role="Discipline" Type="Self.Discipline" Multiplicity="1" />
           <End Role="RecipeDiscipline" Type="Self.RecipeDiscipline" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Discipline">
@@ -357,18 +356,6 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_Recipe_RecipeDiscipline">
-          <End Role="RecipeDiscipline" Type="Self.RecipeDiscipline" Multiplicity="1" />
-          <End Role="Recipe" Type="Self.Recipe" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="RecipeDiscipline">
-              <PropertyRef Name="pk" />
-            </Principal>
-            <Dependent Role="Recipe">
-              <PropertyRef Name="recipeDisciplinePK" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
         <EntityContainer Name="ArbitraderEntities" annotation:LazyLoadingEnabled="true">
           <EntitySet Name="Disciplines" EntityType="Self.Discipline" />
           <EntitySet Name="Flags" EntityType="Self.Flag" />
@@ -401,11 +388,23 @@
             <End Role="Item" EntitySet="Items" />
             <End Role="Recipe" EntitySet="Recipes" />
           </AssociationSet>
-          <AssociationSet Name="FK_Recipe_RecipeDiscipline" Association="Self.FK_Recipe_RecipeDiscipline">
-            <End Role="RecipeDiscipline" EntitySet="RecipeDisciplines" />
+          <AssociationSet Name="FK_RecipeDiscipline_Recipe" Association="ArbitraderModel.FK_RecipeDiscipline_Recipe">
             <End Role="Recipe" EntitySet="Recipes" />
+            <End Role="RecipeDiscipline" EntitySet="RecipeDisciplines" />
           </AssociationSet>
         </EntityContainer>
+        <Association Name="FK_RecipeDiscipline_Recipe">
+          <End Type="ArbitraderModel.Recipe" Role="Recipe" Multiplicity="1" />
+          <End Type="ArbitraderModel.RecipeDiscipline" Role="RecipeDiscipline" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Recipe">
+              <PropertyRef Name="pk" />
+            </Principal>
+            <Dependent Role="RecipeDiscipline">
+              <PropertyRef Name="recipePK" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -473,7 +472,6 @@
                 <ScalarProperty Name="type" ColumnName="type" />
                 <ScalarProperty Name="outputItemPK" ColumnName="outputItemPK" />
                 <ScalarProperty Name="outputItemCount" ColumnName="outputItemCount" />
-                <ScalarProperty Name="recipeDisciplinePK" ColumnName="recipeDisciplinePK" />
                 <ScalarProperty Name="minRating" ColumnName="minRating" />
                 <ScalarProperty Name="ingredientsPK" ColumnName="ingredientsPK" />
                 <ScalarProperty Name="loadDate" ColumnName="loadDate" />
@@ -483,6 +481,7 @@
           <EntitySetMapping Name="RecipeDisciplines">
             <EntityTypeMapping TypeName="ArbitraderModel.RecipeDiscipline">
               <MappingFragment StoreEntitySet="RecipeDiscipline">
+                <ScalarProperty Name="recipePK" ColumnName="recipePK" />
                 <ScalarProperty Name="pk" ColumnName="pk" />
                 <ScalarProperty Name="id" ColumnName="id" />
                 <ScalarProperty Name="disciplinePK" ColumnName="disciplinePK" />

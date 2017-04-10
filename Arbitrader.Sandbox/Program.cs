@@ -30,12 +30,12 @@ namespace Arbitrader.Sandbox
 
         private static void RefreshDataFromAPI(bool replace)
         {
-            var context = new ItemContext();
+            var context = new ItemContext(1, true);
             var client = new HttpClient();
 
             context.DataLoadStarted += (sender, e) => Console.WriteLine($"Started loading data for {e.Count} ids from resource \"{e.Resource}\"");
             context.DataLoadFinished += (sender, e) => Console.WriteLine($"Finished loading data from resource \"{e.Resource}\"");
-            context.DataLoadStatusUpdate += (sender, e) => Console.WriteLine($"Resource: {e.Resource}\t\tCount: {e.Count}");
+            context.DataLoadStatusUpdate += (sender, e) => Console.WriteLine($"Resource: {e.Resource}\t\tCount: {e.Count}\t\tMessage: {e.Message}");
 
             var menu = new ConsoleMenu(replace ? "Select data resource to replace:" : "Select data resource to refresh:");
             var action = replace ? "Replacing" : "Refreshing";
