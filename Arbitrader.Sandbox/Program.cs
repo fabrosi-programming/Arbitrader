@@ -30,7 +30,7 @@ namespace Arbitrader.Sandbox
 
         private static void RefreshDataFromAPI(bool replace)
         {
-            var context = new ItemContext(1, true);
+            var context = new ItemContext(continueOnError: true);
             var client = new HttpClient();
 
             context.DataLoadStarted += (sender, e) => Console.WriteLine($"Started loading data for {e.Count} ids from resource \"{e.Resource}\"");

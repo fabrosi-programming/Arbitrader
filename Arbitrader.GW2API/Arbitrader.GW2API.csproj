@@ -61,63 +61,40 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataModel.Context.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataModel.Context.tt</DependentUpon>
-    </Compile>
-    <Compile Include="DataModel.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataModel.tt</DependentUpon>
-    </Compile>
-    <Compile Include="DataModel.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataModel.edmx</DependentUpon>
-    </Compile>
-    <Compile Include="DataModel\Discipline.cs" />
-    <Compile Include="DataModel\Item.cs" />
-    <Compile Include="DataModel\Recipe.cs" />
-    <Compile Include="Discipline.cs">
-      <DependentUpon>DataModel.tt</DependentUpon>
-    </Compile>
-    <Compile Include="Flag.cs">
-      <DependentUpon>DataModel.tt</DependentUpon>
-    </Compile>
-    <Compile Include="ICanHazID.cs" />
-    <Compile Include="Ingredient.cs">
-      <DependentUpon>DataModel.tt</DependentUpon>
-    </Compile>
-    <Compile Include="Item.cs">
-      <DependentUpon>DataModel.tt</DependentUpon>
-    </Compile>
+    <Compile Include="Entities\DisciplineEntity.cs" />
+    <Compile Include="Entities\Entity.cs" />
+    <Compile Include="Entities\GuildIngredientEntity.cs" />
+    <Compile Include="Entities\IngredientEntity.cs" />
+    <Compile Include="Entities\ItemEntity.cs" />
+    <Compile Include="Entities\ItemFlagEntity.cs" />
+    <Compile Include="Entities\RecipeEntity.cs" />
+    <Compile Include="Entities\RecipeFlagEntity.cs" />
+    <Compile Include="Results\APIDataResult.cs" />
+    <Compile Include="Entities\ArbitraderEntities.cs" />
+    <Compile Include="Results\ItemFlagResult.cs" />
+    <Compile Include="Results\RecipeFlagResult.cs" />
+    <Compile Include="Migrations\Configuration.cs" />
+    <Compile Include="Model\CrafingTreeNode.cs" />
+    <Compile Include="Results\DisciplineResult.cs" />
+    <Compile Include="Results\GuildIngredientResult.cs" />
+    <Compile Include="Results\IngredientResult.cs" />
+    <Compile Include="Results\ItemResult.cs" />
     <Compile Include="ItemContext.cs" />
-    <Compile Include="ItemFlag.cs">
-      <DependentUpon>DataModel.tt</DependentUpon>
-    </Compile>
+    <Compile Include="Market.cs" />
+    <Compile Include="Model\Discipline.cs" />
+    <Compile Include="Model\Flag.cs" />
+    <Compile Include="Model\Item.cs" />
+    <Compile Include="Model\Recipe.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="Recipe.cs">
-      <DependentUpon>DataModel.tt</DependentUpon>
-    </Compile>
-    <Compile Include="RecipeDiscipline.cs">
-      <DependentUpon>DataModel.tt</DependentUpon>
-    </Compile>
+    <Compile Include="Results\RecipeResult.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <EntityDeploy Include="DataModel.edmx">
-      <Generator>EntityModelCodeGenerator</Generator>
-      <LastGenOutput>DataModel.Designer.cs</LastGenOutput>
-    </EntityDeploy>
-    <None Include="DataModel.edmx.diagram">
-      <DependentUpon>DataModel.edmx</DependentUpon>
-    </None>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -127,18 +104,7 @@
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="DataModel.Context.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <DependentUpon>DataModel.edmx</DependentUpon>
-      <LastGenOutput>DataModel.Context.cs</LastGenOutput>
-    </Content>
-    <Content Include="DataModel.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <DependentUpon>DataModel.edmx</DependentUpon>
-      <LastGenOutput>DataModel.cs</LastGenOutput>
-    </Content>
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

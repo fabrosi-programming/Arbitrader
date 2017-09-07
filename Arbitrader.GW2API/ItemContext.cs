@@ -10,6 +10,10 @@ using System.Threading;
 using Arbitrader.GW2API.Properties;
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
+using Arbitrader.GW2API.Results;
+using System.Collections.ObjectModel;
+using Arbitrader.GW2API.Model;
+using Arbitrader.GW2API.Entities;
 
 namespace Arbitrader.GW2API
 {
@@ -18,11 +22,11 @@ namespace Arbitrader.GW2API
         #region Events
         public class DataLoadEventArgs : EventArgs
         {
-            public string Resource { get; set; }
+            public Resource Resource { get; set; }
             public int? Count { get; set; }
             public string Message { get; set; }
 
-            public DataLoadEventArgs(string resource, int? count = null, string message = null)
+            public DataLoadEventArgs(Resource resource, int? count = null, string message = null)
             {
                 this.Resource = resource;
                 this.Count = count;
@@ -56,11 +60,12 @@ namespace Arbitrader.GW2API
             Recipes
         }
 
-        private static readonly string _itemsResource = "items";
-        private static readonly string _recipesResource = "recipes";
-
         private int _updateInterval = 100;
+        private int _maxRetryCount = 1000;
         private bool _continueOnError = true;
+
+        public Collection<Item> Items = new Collection<Item>();
+        public Collection<Recipe> Recipes = new Collection<Recipe>();
 
         public ItemContext(int updateInterval = 100, bool continueOnError = true)
         {
@@ -75,19 +80,41 @@ namespace Arbitrader.GW2API
             var entities = new ArbitraderEntities();
 
             if (replace)
-                this.DeleteExistingData(entities);
+                this.DeleteExistingData(resource, entities);
 
             switch (resource)
             {
                 case Resource.Items:
-                    this.UploadToDatabase<Item>(client, _itemsResource, entities.Items, entities);
+                    this.UploadToDatabase<ItemResult, ItemEntity>(client, resource, entities.Items, entities);
                     break;
                 case Resource.Recipes:
-                    this.UploadToDatabase<Recipe>(client, _recipesResource, entities.Recipes, entities);
+                    this.UploadToDatabase<RecipeResult, RecipeEntity>(client, resource, entities.Recipes, entities);
                     break;
                 default:
                     break;
             }
+
+            this.LoadEntities(entities);
+
+            this.Items = new Collection<Item>();
+            this.Recipes = new Collection<Recipe>();
+
+            foreach (var entity in entities.Items)
+                this.Items.Add(new Item(entity));
+
+            foreach (var entity in entities.Recipes)
+                this.Recipes.Add(new Recipe(entity, this));
+        }
+
+        private void LoadEntities(ArbitraderEntities entities)
+        {
+            entities.Disciplines.Load();
+            entities.GuildIngredients.Load();
+            entities.Ingredients.Load();
+            entities.Items.Load();
+            entities.ItemFlags.Load();
+            entities.Recipes.Load();
+            entities.RecipeFlags.Load();
         }
 
         private void InitializeHttpClient(HttpClient client)
@@ -96,72 +123,77 @@ namespace Arbitrader.GW2API
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
-        private void DeleteExistingData(ArbitraderEntities entities)
+        private void DeleteExistingData(Resource resource, ArbitraderEntities entities)
         {
-            var tableNames = new Dictionary<int, string>()
-            {
-                { 0, "Flag" },
-                { 1, "ItemFlag" },
-                { 2, "Item" },
-                { 3, "Discipline" },
-                { 4, "RecipeDiscipline" },
-                { 5, "Ingredients" },
-                { 6, "Recipe" }
-            };
+            // always clear out recipes due to foreign key relationships with items
+            entities.Disciplines.RemoveRange(entities.Disciplines);
+            entities.RecipeFlags.RemoveRange(entities.RecipeFlags);
+            entities.Ingredients.RemoveRange(entities.Ingredients);
+            entities.GuildIngredients.RemoveRange(entities.GuildIngredients);
+            entities.Recipes.RemoveRange(entities.Recipes);
 
-            foreach (var table in tableNames.OrderBy(kvp => kvp.Key))
-                entities.Database.ExecuteSqlCommand($"DELETE FROM [dbo].[{table.Value}]");
+            if (resource == Resource.Items)
+            {
+                entities.ItemFlags.RemoveRange(entities.ItemFlags);
+                entities.Items.RemoveRange(entities.Items);
+            }
+            
+            entities.SaveChanges();
         }
 
-        private void UploadToDatabase<T>(HttpClient client, string resource, DbSet<T> targetDataSet, ArbitraderEntities entities) where T : class
+        private void UploadToDatabase<R, E>(HttpClient client, Resource resource, DbSet<E> targetDataSet, ArbitraderEntities entities)
+            where R : APIDataResult
+            where E : Entity
+        {
+            var ids = GetIds(client, resource, targetDataSet);
+
+            if (ids == null)
+                return;
+
+            this.OnDataLoadStarted(new DataLoadEventArgs(resource, ids.Count()));
+
+            var count = 0;
+            E result = null;
+
+            foreach (var id in ids)
+            {
+                count += 1;
+                result = this.GetSingleResult<R, E>(client, resource, id) as E;
+
+                if (result != null)
+                    targetDataSet.Add(result);
+
+                if (count % _updateInterval == 0)
+                {
+                    this.SaveChanges(resource, targetDataSet, entities, result);
+                    this.OnDataLoadStatusUpdate(new DataLoadEventArgs(resource, count));
+                }
+            }
+
+            this.SaveChanges(resource, targetDataSet, entities, result);
+            this.OnDataLoadFinished(new DataLoadEventArgs(resource, null));
+        }
+
+        private static IEnumerable<int> GetIds<E>(HttpClient client, Resource resource, DbSet<E> targetDataSet)
+            where E : Entity
         {
             var baseURL = Settings.Default.APIBaseURL;
             var listURL = $"{baseURL}/{resource}";
             var response = client.GetAsync(listURL).Result;
 
             if (!response.IsSuccessStatusCode)
-                return;
+                return null;
 
-            var queryableDbSet = (IQueryable<ICanHazID>)targetDataSet;
-            var existingIds = (from row in queryableDbSet
-                               select row.id).ToList();
-            var unfilteredIds = response.Content.ReadAsAsync<List<int>>().Result;
-            var ids = from id in unfilteredIds
-                      where !existingIds.Contains(id)
-                      select id;
-
-            this.OnDataLoadStarted(new DataLoadEventArgs(resource, ids.Count()));
-
-            var count = 0;
-            T result = null;
-
-            foreach (var id in ids)
-            {
-                count += 1;
-
-                var singleResultURL = $"{listURL}/{id}";
-                var singleResultResponse = client.GetAsync(singleResultURL).Result;
-
-                if (singleResultResponse.IsSuccessStatusCode)
-                {
-                    result = singleResultResponse.Content.ReadAsAsync<T>().Result;
-                    targetDataSet.Add(result);
-                }
-
-                if (count % _updateInterval == 0)
-                {
-                    this.SaveChanges(resource, targetDataSet, entities, result);
-                    
-                    this.OnDataLoadStatusUpdate(new DataLoadEventArgs(resource, count));
-                }
-            }
-
-            this.SaveChanges(resource, targetDataSet, entities, result);
-
-            this.OnDataLoadFinished(new DataLoadEventArgs(resource, null));
+            var queryableDbSet = (IQueryable<Entity>)targetDataSet;
+            var existingIds = queryableDbSet.Select(row => row.APIID)
+                                            .OrderBy(id => id)
+                                            .ToList();
+            var newIds = response.Content.ReadAsAsync<List<int>>().Result;            
+            return newIds.Except(existingIds);
         }
 
-        private void SaveChanges<T>(string resource, DbSet<T> targetDataSet, ArbitraderEntities entities, T result) where T : class
+        private void SaveChanges<E>(Resource resource, DbSet<E> targetDataSet, ArbitraderEntities entities, E result)
+            where E : Entity
         {
             try
             {
@@ -187,6 +219,30 @@ namespace Arbitrader.GW2API
                 if (!this._continueOnError)
                     throw;
             }
+        }
+
+        private Entity GetSingleResult<R, E>(HttpClient client, Resource resource, int id)
+            where R : APIDataResult
+        {
+            var baseURL = Settings.Default.APIBaseURL;
+            var listURL = $"{baseURL}/{resource}";
+            var singleResultURL = $"{listURL}/{id}";
+
+            var retryCount = 1;
+
+            while (retryCount <= this._maxRetryCount)
+            {
+                var singleResultResponse = client.GetAsync(singleResultURL).Result;
+
+                if (singleResultResponse.IsSuccessStatusCode)
+                {
+                    return singleResultResponse.Content.ReadAsAsync<R>().Result.ToEntity();
+                }
+
+                retryCount += 1;
+            }
+
+            return null;
         }
     }
 }
