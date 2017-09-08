@@ -17,13 +17,32 @@ using Arbitrader.GW2API.Entities;
 
 namespace Arbitrader.GW2API
 {
+    /// <summary>
+    /// Contains descriptive data about items and recipes obtained from the GW2 API. Handles
+    /// interactions with the SQL database adn allows replacement of or appending to existing
+    /// data.
+    /// </summary>
     public class ItemContext
     {
         #region Events
+        /// <summary>
+        /// Contains data for events raised at points throughout the data load process.
+        /// </summary>
         public class DataLoadEventArgs : EventArgs
         {
+            /// <summary>
+            /// The GW2 API resource for which data is being loaded.
+            /// </summary>
             public Resource Resource { get; set; }
+
+            /// <summary>
+            /// The number of records affected since the last data load status update.
+            /// </summary>
             public int? Count { get; set; }
+
+            /// <summary>
+            /// A message raised durin gthe data load
+            /// </summary>
             public string Message { get; set; }
 
             public DataLoadEventArgs(Resource resource, int? count = null, string message = null)

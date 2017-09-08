@@ -9,8 +9,16 @@ using System.Threading.Tasks;
 
 namespace Arbitrader.Sandbox
 {
+    /// <summary>
+    /// Provides a console-based interface to allow interactions with Arbitrader functionality. Will later
+    /// be supplanted by a GUI.
+    /// </summary>
     public static class Program
     {
+        /// <summary>
+        /// The entry point of the console application.
+        /// </summary>
+        /// <param name="args">Command line arguments passed in the invocation of the application.</param>
         static void Main(string[] args)
         {
             var menu = new ConsoleMenu("Select an option:", true);
@@ -28,6 +36,10 @@ namespace Arbitrader.Sandbox
             menu.Display();
         }
 
+        /// <summary>
+        /// Displays a menu that allows the refreshing or replacement of recipe and item data from the GW2 API.
+        /// </summary>
+        /// <param name="replace">Indicates whether the user selection will append to or replace existing data.</param>
         private static void RefreshDataFromAPI(bool replace)
         {
             var context = new ItemContext(continueOnError: true);
