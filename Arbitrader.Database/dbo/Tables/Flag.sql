@@ -1,6 +1,0 @@
-﻿CREATE TABLE [dbo].[Flag]
-(
-	[pk] INT NOT NULL PRIMARY KEY, 
-    [flag] NVARCHAR(50) NOT NULL,
-	[loadDate] DATETIME2 NOT NULL DEFAULT GETDATE()
-)
