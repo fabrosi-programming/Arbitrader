@@ -1,5 +1,8 @@
 ﻿namespace Arbitrader.GW2API.Model
 {
+    /// <summary>
+    /// Enumerates the crafting disciplines.
+    /// </summary>
     public enum Discipline
     {
         Tailor,

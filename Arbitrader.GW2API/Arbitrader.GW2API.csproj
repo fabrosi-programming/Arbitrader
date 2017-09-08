@@ -69,6 +69,9 @@
     <Compile Include="Entities\ItemFlagEntity.cs" />
     <Compile Include="Entities\RecipeEntity.cs" />
     <Compile Include="Entities\RecipeFlagEntity.cs" />
+    <Compile Include="Model\ItemRarity.cs" />
+    <Compile Include="Model\ItemType.cs" />
+    <Compile Include="Model\RecipeType.cs" />
     <Compile Include="Results\APIDataResult.cs" />
     <Compile Include="Entities\ArbitraderEntities.cs" />
     <Compile Include="Results\ItemFlagResult.cs" />
@@ -95,6 +98,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="Database\Arbitrader.GW2API.DataModel.bak" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -104,9 +108,7 @@
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Database\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

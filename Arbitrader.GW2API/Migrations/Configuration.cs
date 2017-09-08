@@ -1,21 +1,23 @@
-using Arbitrader.GW2API.Results;
+using System.Data.Entity.Migrations;
+using Arbitrader.GW2API.Entities;
 
 namespace Arbitrader.GW2API.Migrations
 {
-    using System;
-    using System.Data.Entity;
-    using System.Data.Entity.Migrations;
-    using System.Linq;
-    using Arbitrader.GW2API.Entities;
-
     internal sealed class Configuration : DbMigrationsConfiguration<ArbitraderEntities>
     {
+        /// <summary>
+        /// Initializes a new instance of <see cref="Configuration"/>.
+        /// </summary>
         public Configuration()
         {
             AutomaticMigrationsEnabled = true;
             AutomaticMigrationDataLossAllowed = true;
         }
 
+        /// <summary>
+        /// Seeds a new database with test data.
+        /// </summary>
+        /// <param name="context">The entity context for the data to be seeded.</param>
         protected override void Seed(ArbitraderEntities context)
         {
             //  This method will be called after migrating to the latest version.

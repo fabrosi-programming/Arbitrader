@@ -1,30 +1,51 @@
+using System.Data.Entity;
+using System.Linq;
+
 namespace Arbitrader.GW2API.Entities
 {
-    using System.Data.Entity;
-    using System.Linq;
-
+    /// <summary>
+    /// Provides an interface for item, recipe, and market data stored in the Arbitrader SQL database.
+    /// </summary>
     public class ArbitraderEntities : DbContext
     {
-        // Your context has been configured to use a 'DataModel' connection string from your application's 
-        // configuration file (App.config or Web.config). By default, this connection string targets the 
-        // 'Arbitrader.GW2API.DataModel' database on your LocalDb instance. 
-        // 
         // If you wish to target a different database and/or database provider, modify the 'DataModel' 
         // connection string in the application configuration file.
-        public ArbitraderEntities()
-            : base("name=ArbitraderEntities")
-        {
-        }
+        public ArbitraderEntities() : base("name=ArbitraderEntities")
+        { }
 
-        // Add a DbSet for each entity type that you want to include in your model. For more information 
-        // on configuring and using a Code First model, see http://go.microsoft.com/fwlink/?LinkId=390109.
-
+        /// <summary>
+        /// The set of items and their properties.
+        /// </summary>
         public virtual DbSet<ItemEntity> Items { get; set; }
+
+        /// <summary>
+        /// The set of flags assigned to each item in <see cref="Items"/>.
+        /// </summary>
         public virtual DbSet<ItemFlagEntity> ItemFlags { get; set; }
+        
+        /// <summary>
+        /// The set of recipes and their properties.
+        /// </summary>
         public virtual DbSet<RecipeEntity> Recipes { get; set; }
+
+        /// <summary>
+        /// The set of flags assigned to each recipe in <see cref="Recipes"/>.
+        /// </summary>
         public virtual DbSet<RecipeFlagEntity> RecipeFlags { get; set; }
+
+        /// <summary>
+        /// The set of guild ingredients and their properties.
+        /// </summary>
         public virtual DbSet<GuildIngredientEntity> GuildIngredients { get; set; }
+
+        /// <summary>
+        /// The set of associations between recipes and the items required to craft them.
+        /// </summary>
         public virtual DbSet<IngredientEntity> Ingredients { get; set; }
+
+        /// <summary>
+        /// The set of disciplines and the recipes that each discipline is able to craft.
+        /// </summary>
         public virtual DbSet<DisciplineEntity> Disciplines { get; set; }
     }
 }

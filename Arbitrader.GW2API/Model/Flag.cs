@@ -1,5 +1,8 @@
 ﻿namespace Arbitrader.GW2API.Model
 {
+    /// <summary>
+    /// Enumerates the flags that can be assigned to items or recipes.
+    /// </summary>
     public enum Flag
     {
         NoMysticForge,
