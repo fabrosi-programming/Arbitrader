@@ -1,6 +1,0 @@
-﻿CREATE TABLE [dbo].[Discipline]
-(
-	[pk] INT IDENTITY(1,1) NOT NULL PRIMARY KEY, 
-    [name] NVARCHAR(50) NOT NULL,
-	[loadDate] DATETIME2 NOT NULL DEFAULT GETDATE()
-)
