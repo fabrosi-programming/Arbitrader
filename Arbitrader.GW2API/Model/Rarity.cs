@@ -1,6 +1,6 @@
 ﻿namespace Arbitrader.GW2API.Model
 {
-    enum ItemRarity
+    enum Rarity
     {
         Unknown,
         Junk,

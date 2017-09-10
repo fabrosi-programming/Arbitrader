@@ -24,7 +24,7 @@ namespace Arbitrader.GW2API.Model
         /// <summary>
         /// The rarity of the item.
         /// </summary>
-        private ItemRarity _rarity;
+        private Rarity _rarity;
 
         /// <summary>
         /// The level required to use the item.
@@ -69,7 +69,7 @@ namespace Arbitrader.GW2API.Model
         {
             this._icon = new Uri(itemEntity.Icon);
             this._type = Enum.TryParse(itemEntity.Type, out ItemType type) ? type : ItemType.Unknown;
-            this._rarity = Enum.TryParse(itemEntity.Rarity, out ItemRarity rarity) ? rarity : ItemRarity.Unknown;
+            this._rarity = Enum.TryParse(itemEntity.Rarity, out Rarity rarity) ? rarity : Rarity.Unknown;
             this._level = itemEntity.Level;
             this._vendor_value = itemEntity.VendorValue;
 

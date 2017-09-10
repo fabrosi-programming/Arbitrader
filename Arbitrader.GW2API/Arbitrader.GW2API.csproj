@@ -69,7 +69,7 @@
     <Compile Include="Entities\ItemFlagEntity.cs" />
     <Compile Include="Entities\RecipeEntity.cs" />
     <Compile Include="Entities\RecipeFlagEntity.cs" />
-    <Compile Include="Model\ItemRarity.cs" />
+    <Compile Include="Model\Rarity.cs" />
     <Compile Include="Model\ItemType.cs" />
     <Compile Include="Model\RecipeType.cs" />
     <Compile Include="Results\APIDataResult.cs" />
