@@ -65,7 +65,9 @@ namespace Arbitrader.GW2API.Entities
                 Rarity = result.rarity,
                 Level = result.level,
                 VendorValue = result.vendor_value,
-                Flags = result.flags.Select(f => (ItemFlagEntity)f.ToEntity()).ToList()
+                Flags = result.flags
+                              .Select(f => (ItemFlagEntity)f.ToEntity())
+                              .ToList()
             };
         }
     }

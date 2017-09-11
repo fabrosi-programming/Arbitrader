@@ -81,8 +81,8 @@ namespace Arbitrader.GW2API.Entities
                                     .Select(i => (IngredientEntity)i)
                                     .ToList(),
                 GuildIngredients = result.guild_ingredients
-                                          .Select(i => (GuildIngredientEntity)i)
-                                          .ToList()
+                                         .Select(i => (GuildIngredientEntity)i)
+                                         .ToList()
             };
         }
     }

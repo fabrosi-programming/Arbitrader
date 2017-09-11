@@ -7,9 +7,14 @@ namespace Arbitrader.GW2API.Entities
     public class IndividualListingEntity : Entity
     {
         /// <summary>
+        /// Gets or sets whether the listing is a buy or sell order.
+        /// </summary>
+        public string Direction { get; set; }
+
+        /// <summary>
         /// Gets or sets the number of individual listings at this price point.
         /// </summary>
-        public int Listings { get; set; }
+        public int ListingCount { get; set; }
 
         /// <summary>
         /// Gets or sets the order price per unit.
@@ -21,13 +26,17 @@ namespace Arbitrader.GW2API.Entities
         /// </summary>
         public int Quantity { get; set; }
 
+        /// <summary>
+        /// Converts from <see cref="IndividualListingResult"/> to its associated entity, <see cref="IndividualListingEntity"/>.
+        /// </summary>
+        /// <param name="result">A result containing the data to be mapped to the entity.</param>
         public static implicit operator IndividualListingEntity(IndividualListingResult result)
         {
             return new IndividualListingEntity()
             {
                 APIID = result.id,
                 LoadDate = result.LoadDate,
-                Listings = result.listings,
+                ListingCount = result.listings,
                 UnitPrice = result.unit_price,
                 Quantity = result.quantity
             };

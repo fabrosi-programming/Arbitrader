@@ -20,6 +20,10 @@ namespace Arbitrader.GW2API.Results
         /// </summary>
         public int quantity { get; set; }
 
+        /// <summary>
+        /// Returns a <see cref="IndividualListingEntity"/> that contains the data from the <see cref="IndividualListingResult"/>.
+        /// </summary>
+        /// <returns>A <see cref="IndividualListingEntity"/> that contains the data from the <see cref="IndividualListingResult"/>.</returns>
         internal override Entity ToEntity()
         {
             return (IndividualListingEntity)this;

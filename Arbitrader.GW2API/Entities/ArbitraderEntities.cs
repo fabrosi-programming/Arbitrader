@@ -46,6 +46,7 @@ namespace Arbitrader.GW2API.Entities
         /// <summary>
         /// The set of disciplines and the recipes that each discipline is able to craft.
         /// </summary>
+        /// 
         public virtual DbSet<DisciplineEntity> Disciplines { get; set; }
 
         /// <summary>
@@ -53,6 +54,9 @@ namespace Arbitrader.GW2API.Entities
         /// </summary>
         public virtual DbSet<ListingEntity> Listings { get; set; }
 
+        /// <summary>
+        /// The set of individual price points listed on the market per item.
+        /// </summary>
         public virtual DbSet<IndividualListingEntity> IndividualListings { get; set; }
     }
 }
