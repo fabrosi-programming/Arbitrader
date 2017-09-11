@@ -24,15 +24,9 @@ namespace Arbitrader.GW2API.Results
         /// Returns a <see cref="GuildIngredientEntity"/> that contains the data from the <see cref="GuildIngredientResult"/>.
         /// </summary>
         /// <returns>A <see cref="GuildIngredientEntity"/> that contains the data from the <see cref="GuildIngredientResult"/>.</returns>
-        public override Entity ToEntity()
+        internal override Entity ToEntity()
         {
-            return new GuildIngredientEntity()
-            {
-                APIID = this.id,
-                LoadDate = this.LoadDate,
-                Count = this.count,
-                UpgradeID = this.upgrade_id
-            };
+            return (GuildIngredientEntity)this;
         }
     }
 }

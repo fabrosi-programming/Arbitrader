@@ -30,7 +30,13 @@ namespace Arbitrader.GW2API.Entities
         /// <param name="result">A result containing the data to be mapped to the entity.</param>
         public static implicit operator GuildIngredientEntity(GuildIngredientResult result)
         {
-            return (GuildIngredientEntity)result.ToEntity();
+            return new GuildIngredientEntity()
+            {
+                APIID = result.id,
+                LoadDate = result.LoadDate,
+                UpgradeID = result.upgrade_id,
+                Count = result.count
+            };
         }
     }
 }

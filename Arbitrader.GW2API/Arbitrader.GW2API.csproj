@@ -61,23 +61,26 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="APIResource.cs" />
     <Compile Include="Entities\DisciplineEntity.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\GuildIngredientEntity.cs" />
     <Compile Include="Entities\IngredientEntity.cs" />
     <Compile Include="Entities\ItemEntity.cs" />
     <Compile Include="Entities\ItemFlagEntity.cs" />
+    <Compile Include="Entities\ListingEntity.cs" />
     <Compile Include="Entities\RecipeEntity.cs" />
     <Compile Include="Entities\RecipeFlagEntity.cs" />
+    <Compile Include="Entities\IndividualListingEntity.cs" />
     <Compile Include="Model\Rarity.cs" />
     <Compile Include="Model\ItemType.cs" />
     <Compile Include="Model\RecipeType.cs" />
     <Compile Include="Results\APIDataResult.cs" />
     <Compile Include="Entities\ArbitraderEntities.cs" />
+    <Compile Include="Results\ListingResult.cs" />
     <Compile Include="Results\ItemFlagResult.cs" />
     <Compile Include="Results\RecipeFlagResult.cs" />
     <Compile Include="Migrations\Configuration.cs" />
-    <Compile Include="Model\CrafingTreeNode.cs" />
     <Compile Include="Results\DisciplineResult.cs" />
     <Compile Include="Results\GuildIngredientResult.cs" />
     <Compile Include="Results\IngredientResult.cs" />
@@ -95,6 +98,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="Results\RecipeResult.cs" />
+    <Compile Include="Results\IndividualListingResult.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

@@ -13,7 +13,6 @@ namespace Arbitrader.GW2API.Results
         /// </summary>
         public string name { get; set; }
 
-
         /// <summary>
         /// Returns a <see cref="ItemFlagResult"/> that corresponds to the name given in the provided string.
         /// </summary>
@@ -30,14 +29,9 @@ namespace Arbitrader.GW2API.Results
         /// Returns a <see cref="ItemFlagEntity"/> that contains the data from the <see cref="ItemFlagResult"/>.
         /// </summary>
         /// <returns>A <see cref="ItemFlagEntity"/> that contains the data from the <see cref="ItemFlagResult"/>.</returns>
-        public override Entity ToEntity()
+        internal override Entity ToEntity()
         {
-            return new ItemFlagEntity()
-            {
-                APIID = this.id,
-                LoadDate = this.LoadDate,
-                Name = this.name
-            };
+            return (ItemFlagEntity)this;
         }
     }
 }

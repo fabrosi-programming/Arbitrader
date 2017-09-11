@@ -20,7 +20,12 @@ namespace Arbitrader.GW2API.Entities
         /// <param name="result">A result containing the data to be mapped to the entity.</param>
         public static implicit operator DisciplineEntity(DisciplineResult result)
         {
-            return (DisciplineEntity)result.ToEntity();
+            return new DisciplineEntity()
+            {
+                APIID = result.id,
+                LoadDate = result.LoadDate,
+                Name = result.name
+            };
         }
     }
 }

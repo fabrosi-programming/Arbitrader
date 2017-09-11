@@ -18,12 +18,12 @@ namespace Arbitrader.GW2API.Results
         /// <summary>
         /// Gets or sets the date and time at which the result associated with the entity was pulled from the GW2 API.
         /// </summary>
-        public DateTime LoadDate { get; set; }
+        internal DateTime LoadDate { get; set; }
 
         /// <summary>
         /// Initializes a new instance of <see cref="APIDataResult"/>.
         /// </summary>
-        public APIDataResult()
+        internal APIDataResult()
         {
             this.LoadDate = DateTime.Now;
         }
@@ -32,6 +32,6 @@ namespace Arbitrader.GW2API.Results
         /// Returns a database entity that contains the data from the <see cref="APIDataResult"/>.
         /// </summary>
         /// <returns>A database entity that contains the data from the <see cref="APIDataResult"/>.</returns>
-        public abstract Entity ToEntity();
+        internal abstract Entity ToEntity();
     }
 }

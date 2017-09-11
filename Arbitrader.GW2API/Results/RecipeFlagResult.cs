@@ -29,14 +29,9 @@ namespace Arbitrader.GW2API.Results
         /// Returns a <see cref="RecipeFlagEntity"/> that contains the data from the <see cref="RecipeFlagResult"/>.
         /// </summary>
         /// <returns>A <see cref="RecipeFlagEntity"/> that contains the data from the <see cref="RecipeFlagResult"/>.</returns>
-        public override Entity ToEntity()
+        internal override Entity ToEntity()
         {
-            return new RecipeFlagEntity()
-            {
-                APIID = this.id,
-                LoadDate = this.LoadDate,
-                Name = this.name
-            };
+            return (RecipeFlagEntity)this;
         }
     }
 }

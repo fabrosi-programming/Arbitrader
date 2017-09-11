@@ -33,7 +33,7 @@ namespace Arbitrader.GW2API.Entities
         /// Gets or sets the rarity of the item.
         /// </summary>
         public string Rarity { get; set; }
-        
+
         /// <summary>
         /// Gets or sets the level required to use the item.
         /// </summary>

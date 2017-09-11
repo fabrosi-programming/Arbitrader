@@ -30,14 +30,9 @@ namespace Arbitrader.GW2API.Results
         /// Returns a <see cref="DisciplineEntity"/> that contains the data from the <see cref="DisciplineResult"/>.
         /// </summary>
         /// <returns>A <see cref="DisciplineEntity"/> that contains the data from the <see cref="DisciplineResult"/>.</returns>
-        public override Entity ToEntity()
+        internal override Entity ToEntity()
         {
-            return new DisciplineEntity()
-            {
-                APIID = this.id,
-                LoadDate = this.LoadDate,
-                Name = this.name
-            };
+            return (DisciplineEntity)this;
         }
     }
 }

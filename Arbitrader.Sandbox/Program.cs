@@ -19,17 +19,17 @@ namespace Arbitrader.Sandbox
         /// The entry point of the console application.
         /// </summary>
         /// <param name="args">Command line arguments passed in the invocation of the application.</param>
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             var menu = new ConsoleMenu("Select an option:", true);
             menu.AddOption('r', new ConsoleMenu.MenuOption()
             {
-                Description = "Refresh trade and recipe data",
+                Description = "Get missing data from API",
                 Action = () => RefreshDataFromAPI(false)
             });
             menu.AddOption('n', new ConsoleMenu.MenuOption()
             {
-                Description = "Replace trade and recipe data",
+                Description = "Replace existing data",
                 Action = () => RefreshDataFromAPI(true)
             });
 
@@ -51,13 +51,14 @@ namespace Arbitrader.Sandbox
 
             var menu = new ConsoleMenu(replace ? "Select data resource to replace:" : "Select data resource to refresh:");
             var action = replace ? "Replacing" : "Refreshing";
+
             menu.AddOption('i', new ConsoleMenu.MenuOption()
             {
                 Description = "Items",
                 Action = () =>
                 {
                     Console.WriteLine($"{action} item data...");
-                    context.Load(client, ItemContext.Resource.Items, replace);
+                    context.Load(client, APIResource.Items, replace);
                     Console.WriteLine("Done.");
                 }
             });
@@ -67,7 +68,17 @@ namespace Arbitrader.Sandbox
                 Action = () =>
                 {
                     Console.WriteLine($"{action} recipe data...");
-                    context.Load(client, ItemContext.Resource.Recipes, replace);
+                    context.Load(client, APIResource.Recipes, replace);
+                    Console.WriteLine("Done.");
+                }
+            });
+            menu.AddOption('m', new ConsoleMenu.MenuOption()
+            {
+                Description = "Market Listings",
+                Action = () =>
+                {
+                    Console.WriteLine($"{action} market listings...");
+                    context.Load(client, APIResource.CommerceListings, replace);
                     Console.WriteLine("Done.");
                 }
             });
@@ -77,8 +88,9 @@ namespace Arbitrader.Sandbox
                 Action = () =>
                 {
                     Console.WriteLine($"{action} all data...");
-                    context.Load(client, ItemContext.Resource.Items, replace);
-                    context.Load(client, ItemContext.Resource.Recipes, replace);
+                    context.Load(client, APIResource.Items, replace);
+                    context.Load(client, APIResource.Recipes, replace);
+                    context.Load(client, APIResource.CommerceListings, replace);
                     Console.WriteLine("Done.");
                 }
             });

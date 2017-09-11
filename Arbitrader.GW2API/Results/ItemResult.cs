@@ -29,7 +29,7 @@
         /// Gets or sets the rarity of the item.
         /// </summary>
         public string rarity { get; set; }
-        
+
         /// <summary>
         /// Gets or sets the level required to use the item.
         /// </summary>
@@ -49,20 +49,9 @@
         /// Returns a <see cref="ItemEntity"/> that contains the data from the <see cref="ItemResult"/>.
         /// </summary>
         /// <returns>A <see cref="ItemEntity"/> that contains the data from the <see cref="ItemResult"/>.</returns>
-        public override Entity ToEntity()
+        internal override Entity ToEntity()
         {
-            return new ItemEntity()
-            {
-                APIID = this.id,
-                LoadDate = this.LoadDate,
-                Name = this.name,
-                Icon = this.icon,
-                Type = this.type,
-                Rarity = this.rarity,
-                Level = this.level,
-                VendorValue = this.vendor_value,
-                Flags = this.flags.Select(f => (ItemFlagEntity)f.ToEntity()).ToList()
-            };
+            return (ItemEntity)this;
         }
     }
 }

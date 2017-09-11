@@ -22,7 +22,7 @@ namespace Arbitrader.GW2API.Entities
         /// The set of flags assigned to each item in <see cref="Items"/>.
         /// </summary>
         public virtual DbSet<ItemFlagEntity> ItemFlags { get; set; }
-        
+
         /// <summary>
         /// The set of recipes and their properties.
         /// </summary>
@@ -47,5 +47,12 @@ namespace Arbitrader.GW2API.Entities
         /// The set of disciplines and the recipes that each discipline is able to craft.
         /// </summary>
         public virtual DbSet<DisciplineEntity> Disciplines { get; set; }
+
+        /// <summary>
+        /// The set of market listings per item.
+        /// </summary>
+        public virtual DbSet<ListingEntity> Listings { get; set; }
+
+        public virtual DbSet<IndividualListingEntity> IndividualListings { get; set; }
     }
 }

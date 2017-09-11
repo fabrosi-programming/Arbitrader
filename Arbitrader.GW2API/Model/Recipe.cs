@@ -10,7 +10,7 @@ namespace Arbitrader.GW2API.Model
     /// <summary>
     /// Represents a single recipe and its relationships to the items used to craft it.
     /// </summary>
-    public class Recipe
+    internal class Recipe
     {
         /// <summary>
         /// The unique identifier in the GW2 API for the recipe.
@@ -50,14 +50,14 @@ namespace Arbitrader.GW2API.Model
         /// <summary>
         /// Gets or sets the list of ingredients required to craft the recipe.
         /// </summary>
-        public Collection<Item> Ingredients { get; set; } = new Collection<Item>();
+        internal Collection<Item> Ingredients { get; set; } = new Collection<Item>();
 
         /// <summary>
         /// Initializes a new instance of <see cref="Recipe"/>. Uses the database context to resolve item IDs to instances of <see cref="Item"/>.
         /// </summary>
         /// <param name="recipeEntity">The entity containing the descriptors for the recipe.</param>
         /// <param name="context">The database context used to resolve item IDs to instances of <see cref="Item"/>.</param>
-        public Recipe(RecipeEntity recipeEntity, ItemContext context)
+        internal Recipe(RecipeEntity recipeEntity, ItemContext context)
         {
             this._type = Enum.TryParse(recipeEntity.Type, out RecipeType type) ? type : RecipeType.Unknown;
             this._outputItem = this.GetItem(recipeEntity.OutputItemID.Value, context.Items);
@@ -88,7 +88,7 @@ namespace Arbitrader.GW2API.Model
         /// <param name="itemId">The unique identifier to be resolved.</param>
         /// <param name="items">The collection of <see cref="Item"/> to search for the given unique identifier.</param>
         /// <returns></returns>
-        private Item GetItem(int itemId, IEnumerable<Item> items)
+        internal Item GetItem(int itemId, IEnumerable<Item> items)
         {
             return items.Where(i => i.ID == itemId)
                         .First();

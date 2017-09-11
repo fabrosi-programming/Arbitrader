@@ -9,7 +9,7 @@ namespace Arbitrader.GW2API.Model
     /// <summary>
     /// Represents a single item in GW2 and all of its upstream and downstream recipe dependencies.
     /// </summary>
-    public class Item
+    internal class Item
     {
         /// <summary>
         /// The address of the icon used to represent the item in the GW2 UI.
@@ -44,28 +44,28 @@ namespace Arbitrader.GW2API.Model
         /// <summary>
         /// Gets or sets the name of the item.
         /// </summary>
-        public string Name { get; set; }
+        internal string Name { get; set; }
 
         /// <summary>
         /// Gets or sets the unique identifier in the GW2 API for the result associated with the entity.
         /// </summary>
-        public int ID { get; set; }
+        internal int ID { get; set; }
 
         /// <summary>
         /// Gets or sets the list of recipes that require the item in order to be crafted.
         /// </summary>
-        public Collection<Recipe> DependentRecipes { get; set; } = new Collection<Recipe>();
+        internal Collection<Recipe> DependentRecipes { get; set; } = new Collection<Recipe>();
 
         /// <summary>
         /// Gets or sets the list of recipes for which the item is the output item.
         /// </summary>
-        public Collection<Recipe> GeneratingRecipes { get; set; } = new Collection<Recipe>();
+        internal Collection<Recipe> GeneratingRecipes { get; set; } = new Collection<Recipe>();
 
         /// <summary>
         /// Initializes a new instance of <see cref="Item"/> from an existing entity.
         /// </summary>
         /// <param name="itemEntity">The entity containing the descriptors for the item.</param>
-        public Item(ItemEntity itemEntity)
+        internal Item(ItemEntity itemEntity)
         {
             this._icon = new Uri(itemEntity.Icon);
             this._type = Enum.TryParse(itemEntity.Type, out ItemType type) ? type : ItemType.Unknown;

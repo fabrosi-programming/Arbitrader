@@ -33,7 +33,7 @@ namespace Arbitrader.GW2API
             /// <summary>
             /// The GW2 API resource for which data is being loaded.
             /// </summary>
-            public Resource Resource { get; set; }
+            public APIResource Resource { get; set; }
 
             /// <summary>
             /// The number of records affected since the last data load status update.
@@ -51,7 +51,7 @@ namespace Arbitrader.GW2API
             /// <param name="resource">The GW2 API resource for which data is being loaded.</param>
             /// <param name="count">The number of records affected since the last data load status update.</param>
             /// <param name="message">A message raised during the data load.</param>
-            public DataLoadEventArgs(Resource resource, int? count = null, string message = null)
+            public DataLoadEventArgs(APIResource resource, int? count = null, string message = null)
             {
                 this.Resource = resource;
                 this.Count = count;
@@ -103,15 +103,6 @@ namespace Arbitrader.GW2API
         #endregion
 
         /// <summary>
-        /// Enumerates resource types that can be loaded from the GW2 API.
-        /// </summary>
-        public enum Resource
-        {
-            Items,
-            Recipes
-        }
-
-        /// <summary>
         /// The number of records processed between occurences of <see cref="DataLoadStatusUpdate"/>.
         /// </summary>
         private int _updateInterval = 100;
@@ -129,14 +120,14 @@ namespace Arbitrader.GW2API
         private bool _continueOnError = true;
 
         /// <summary>
-        /// The set of items contained by the context.
-        /// </summary>
-        public Collection<Item> Items = new Collection<Item>();
-
-        /// <summary>
         /// The set of recipes contained by the context.
         /// </summary>
-        public Collection<Recipe> Recipes = new Collection<Recipe>();
+        private Collection<Recipe> _recipes = new Collection<Recipe>();
+
+        /// <summary>
+        /// The set of items contained by the context.
+        /// </summary>
+        internal Collection<Item> Items = new Collection<Item>();
 
         /// <summary>
         /// Initializes a new instance of <see cref="ItemContext"/>.
@@ -156,22 +147,27 @@ namespace Arbitrader.GW2API
         /// <param name="client">The HTTP client used to get results from the GW2 API.</param>
         /// <param name="resource">The type of resource to get data for.</param>
         /// <param name="replace">Determines whether existing data in the database is overwritten or appended to.</param>
-        public void Load(HttpClient client, Resource resource, bool replace)
+        public void Load(HttpClient client, APIResource resource, bool replace)
         {
             this.InitializeHttpClient(client);
 
             using (var entities = new ArbitraderEntities())
             {
+                this.LoadEntities(entities);
+
                 if (replace)
                     this.DeleteExistingData(resource, entities);
 
                 switch (resource)
                 {
-                    case Resource.Items:
+                    case APIResource.Items:
                         this.UploadToDatabase<ItemResult, ItemEntity>(client, resource, entities.Items, entities);
                         break;
-                    case Resource.Recipes:
+                    case APIResource.Recipes:
                         this.UploadToDatabase<RecipeResult, RecipeEntity>(client, resource, entities.Recipes, entities);
+                        break;
+                    case APIResource.CommerceListings:
+                        this.UploadToDatabase<ListingResult, ListingEntity>(client, resource, entities.Listings, entities);
                         break;
                     default:
                         break;
@@ -190,13 +186,13 @@ namespace Arbitrader.GW2API
                 this.LoadEntities(entities);
 
                 this.Items = new Collection<Item>();
-                this.Recipes = new Collection<Recipe>();
+                this._recipes = new Collection<Recipe>();
 
                 foreach (var entity in entities.Items)
                     this.Items.Add(new Item(entity));
 
                 foreach (var entity in entities.Recipes)
-                    this.Recipes.Add(new Recipe(entity, this));
+                    this._recipes.Add(new Recipe(entity, this));
             }
         }
 
@@ -206,13 +202,17 @@ namespace Arbitrader.GW2API
         /// <param name="entities">An interface for item, recipe, and market data stored in the Arbitrader SQL database.</param>
         private void LoadEntities(ArbitraderEntities entities)
         {
+            entities.Items.Load();
+            entities.ItemFlags.Load();
+
             entities.Disciplines.Load();
             entities.GuildIngredients.Load();
             entities.Ingredients.Load();
-            entities.Items.Load();
-            entities.ItemFlags.Load();
             entities.Recipes.Load();
             entities.RecipeFlags.Load();
+
+            entities.Listings.Load();
+            entities.IndividualListings.Load();
         }
 
         /// <summary>
@@ -230,21 +230,29 @@ namespace Arbitrader.GW2API
         /// </summary>
         /// <param name="resource">The resource for which data is to be deleted.</param>
         /// <param name="entities">An interface for item, recipe, and market data stored in the Arbitrader SQL database.</param>
-        private void DeleteExistingData(Resource resource, ArbitraderEntities entities)
+        private void DeleteExistingData(APIResource resource, ArbitraderEntities entities)
         {
-            // always clear out recipes due to foreign key relationships with items
-            entities.Disciplines.RemoveRange(entities.Disciplines);
-            entities.RecipeFlags.RemoveRange(entities.RecipeFlags);
-            entities.Ingredients.RemoveRange(entities.Ingredients);
-            entities.GuildIngredients.RemoveRange(entities.GuildIngredients);
-            entities.Recipes.RemoveRange(entities.Recipes);
+            if (resource == APIResource.CommerceListings || resource == APIResource.Recipes || resource == APIResource.Items)
+            {
+                entities.IndividualListings.RemoveRange(entities.IndividualListings);
+                entities.Listings.RemoveRange(entities.Listings);
+            }
 
-            if (resource == Resource.Items)
+            if (resource == APIResource.Recipes || resource == APIResource.Items)
+            {
+                entities.Disciplines.RemoveRange(entities.Disciplines);
+                entities.RecipeFlags.RemoveRange(entities.RecipeFlags);
+                entities.Ingredients.RemoveRange(entities.Ingredients);
+                entities.GuildIngredients.RemoveRange(entities.GuildIngredients);
+                entities.Recipes.RemoveRange(entities.Recipes);
+            }
+
+            if (resource == APIResource.Items)
             {
                 entities.ItemFlags.RemoveRange(entities.ItemFlags);
                 entities.Items.RemoveRange(entities.Items);
             }
-            
+
             entities.SaveChanges();
         }
 
@@ -257,7 +265,7 @@ namespace Arbitrader.GW2API
         /// <param name="resource">The type of resource to get data for.</param>
         /// <param name="targetDataSet">The dataset containing entities to be populated from results from the GW2 API.</param>
         /// <param name="entities">An interface for item, recipe, and market data stored in the Arbitrader SQL database.</param>
-        private void UploadToDatabase<R, E>(HttpClient client, Resource resource, DbSet<E> targetDataSet, ArbitraderEntities entities)
+        private void UploadToDatabase<R, E>(HttpClient client, APIResource resource, DbSet<E> targetDataSet, ArbitraderEntities entities)
             where R : APIDataResult
             where E : Entity
         {
@@ -298,11 +306,11 @@ namespace Arbitrader.GW2API
         /// <param name="resource">The type of resource to get data for.</param>
         /// <param name="targetDataSet">The dataset containing entities to be populated from results from the GW2 API.</param>
         /// <returns>A complete list of all possible IDs for the specified resource.</returns>
-        private static IEnumerable<int> GetIds<E>(HttpClient client, Resource resource, DbSet<E> targetDataSet)
+        private static IEnumerable<int> GetIds<E>(HttpClient client, APIResource resource, DbSet<E> targetDataSet)
             where E : Entity
         {
             var baseURL = Settings.Default.APIBaseURL;
-            var listURL = $"{baseURL}/{resource}";
+            var listURL = $"{baseURL}/{resource.GetPath()}";
             var response = client.GetAsync(listURL).Result;
 
             if (!response.IsSuccessStatusCode)
@@ -324,7 +332,7 @@ namespace Arbitrader.GW2API
         /// <param name="targetDataSet">The dataset containing entities to be populated from results from the GW2 API.</param>
         /// <param name="entities">An interface for item, recipe, and market data stored in the Arbitrader SQL database.</param>
         /// <param name="result">The GW2 API query result containing data to be saved to the database.</param>
-        private void SaveChanges<E>(Resource resource, DbSet<E> targetDataSet, ArbitraderEntities entities, E result)
+        private void SaveChanges<E>(APIResource resource, DbSet<E> targetDataSet, ArbitraderEntities entities, E result)
             where E : Entity
         {
             try
@@ -362,11 +370,11 @@ namespace Arbitrader.GW2API
         /// <param name="resource">The type of resource to get data for.</param>
         /// <param name="id">The ID of the result to be retrieved.</param>
         /// <returns>A result for a single ID from the GW2 API for the specified resource.</returns>
-        private Entity GetSingleResult<R, E>(HttpClient client, Resource resource, int id)
+        private Entity GetSingleResult<R, E>(HttpClient client, APIResource resource, int id)
             where R : APIDataResult
         {
             var baseURL = Settings.Default.APIBaseURL;
-            var listURL = $"{baseURL}/{resource}";
+            var listURL = $"{baseURL}/{resource.GetPath()}";
             var singleResultURL = $"{listURL}/{id}";
 
             var retryCount = 1;

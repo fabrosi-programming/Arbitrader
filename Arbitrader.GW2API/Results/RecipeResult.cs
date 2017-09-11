@@ -14,7 +14,7 @@ namespace Arbitrader.GW2API.Results
         /// Gets or sets the type of the recipe.
         /// </summary>
         public string type { get; set; }
-        
+
         /// <summary>
         /// Gets or sets the unique identifier in the GW2 API for the item that results from crafting the recipe.
         /// </summary>
@@ -59,30 +59,9 @@ namespace Arbitrader.GW2API.Results
         /// Returns a <see cref="RecipeEntity"/> that contains the data from the <see cref="RecipeResult"/>.
         /// </summary>
         /// <returns>A <see cref="RecipeEntity"/> that contains the data from the <see cref="RecipeResult"/>.</returns>
-        public override Entity ToEntity()
+        internal override Entity ToEntity()
         {
-            return new RecipeEntity()
-            {
-                APIID = this.id,
-                LoadDate = this.LoadDate,
-                Type = this.type,
-                OutputItemID = this.output_item_id,
-                OutputItemCount = this.output_item_count,
-                MinimumRating = this.min_rating,
-                OutputUpgradeID = this.output_upgrade_id,
-                Disciplines = this.disciplines
-                                  .Select(d => (DisciplineEntity)d)
-                                  .ToList(),
-                Flags = this.flags
-                            .Select(f => (RecipeFlagEntity)f)
-                            .ToList(),
-                Ingredients = this.ingredients
-                                  .Select(i => (IngredientEntity)i)
-                                  .ToList(),
-                GuildIngredients = this.guild_ingredients
-                                       .Select(i => (GuildIngredientEntity)i)
-                                       .ToList()
-            };
+            return (RecipeEntity)this;
         }
     }
 }
