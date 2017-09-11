@@ -57,9 +57,13 @@ namespace Arbitrader.Sandbox
                 Description = "Items",
                 Action = () =>
                 {
+                    var startTime = DateTime.Now;
                     Console.WriteLine($"{action} item data...");
+
                     context.Load(client, APIResource.Items, replace);
-                    Console.WriteLine("Done.");
+
+                    var elapsed = DateTime.Now - startTime;
+                    Console.WriteLine($"Done. ({elapsed.TotalSeconds} s)");
                 }
             });
             menu.AddOption('r', new ConsoleMenu.MenuOption()
@@ -67,9 +71,13 @@ namespace Arbitrader.Sandbox
                 Description = "Recipes",
                 Action = () =>
                 {
+                    var startTime = DateTime.Now;
                     Console.WriteLine($"{action} recipe data...");
+
                     context.Load(client, APIResource.Recipes, replace);
-                    Console.WriteLine("Done.");
+
+                    var elapsed = DateTime.Now - startTime;
+                    Console.WriteLine($"Done. ({elapsed.TotalSeconds} s)");
                 }
             });
             menu.AddOption('m', new ConsoleMenu.MenuOption()
@@ -77,9 +85,13 @@ namespace Arbitrader.Sandbox
                 Description = "Market Listings",
                 Action = () =>
                 {
+                    var startTime = DateTime.Now;
                     Console.WriteLine($"{action} market listings...");
+
                     context.Load(client, APIResource.CommerceListings, replace);
-                    Console.WriteLine("Done.");
+
+                    var elapsed = DateTime.Now - startTime;
+                    Console.WriteLine($"Done. ({elapsed.TotalSeconds} s)");
                 }
             });
             menu.AddOption('a', new ConsoleMenu.MenuOption()
@@ -87,11 +99,15 @@ namespace Arbitrader.Sandbox
                 Description = "All",
                 Action = () =>
                 {
+                    var startTime = DateTime.Now;
                     Console.WriteLine($"{action} all data...");
+
                     context.Load(client, APIResource.Items, replace);
                     context.Load(client, APIResource.Recipes, replace);
                     context.Load(client, APIResource.CommerceListings, replace);
-                    Console.WriteLine("Done.");
+
+                    var elapsed = DateTime.Now - startTime;
+                    Console.WriteLine($"Done. ({elapsed.TotalSeconds} s)");
                 }
             });
 
