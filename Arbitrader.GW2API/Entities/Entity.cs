@@ -24,6 +24,6 @@ namespace Arbitrader.GW2API.Entities
         /// Gets or sets the date and time at which the result associated with the entity was pulled from the GW2 API.
         /// </summary>
         [Column(TypeName = "datetime2")]
-        public DateTime LoadDate { get; set; }
+        public DateTime LoadDate { get; set; } = DateTime.Now;
     }
 }

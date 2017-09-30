@@ -40,17 +40,39 @@ namespace Arbitrader.GW2API.Model
         /// <summary>
         /// Gets or sets the list of disciplines that are able to craft the recipe.
         /// </summary>
-        private Collection<Discipline> _disciplines = new Collection<Discipline>();
+        private List<Discipline> _disciplines = new List<Discipline>();
 
         /// <summary>
         /// Gets or sets the list of flags assigned to the recipe.
         /// </summary>
-        private Collection<Flag> _flags = new Collection<Flag>();
+        private List<Flag> _flags = new List<Flag>();
 
         /// <summary>
         /// Gets or sets the list of ingredients required to craft the recipe.
         /// </summary>
-        internal Collection<Item> Ingredients { get; set; } = new Collection<Item>();
+        internal Dictionary<Item, int> Ingredients { get; set; } = new Dictionary<Item, int>();
+
+        /// <summary>
+        /// Gets a list of all nodes on the ingredient tree that this recipe depends on.
+        /// </summary>
+        internal List<Item> IngredientTreeNodes
+        {
+            get
+            {
+                var nodes = new List<Item>()
+                { this._outputItem };
+
+                var endpoints = this.Ingredients.Keys.Where(i => i.GeneratingRecipes.Count == 0);
+
+                nodes.AddRange(endpoints);
+
+                foreach (var item in this.Ingredients.Keys.Except(endpoints))
+                    foreach (var recipe in item.GeneratingRecipes)
+                        nodes.AddRange(recipe.IngredientTreeNodes);
+
+                return nodes.Distinct().ToList();
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of <see cref="Recipe"/>. Uses the database context to resolve item IDs to instances of <see cref="Item"/>.
@@ -70,13 +92,13 @@ namespace Arbitrader.GW2API.Model
                 this._flags.Add((Flag)Enum.Parse(typeof(Flag), flagResult.Name));
 
             foreach (var ingredient in recipeEntity.Ingredients)
-                this.Ingredients.Add(this.GetItem(ingredient.ItemID, context.Items));
+                this.Ingredients.Add(this.GetItem(ingredient.ItemID, context.Items), ingredient.Count);
 
             foreach (var ingredient in recipeEntity.GuildIngredients)
-                this.Ingredients.Add(this.GetItem(ingredient.UpgradeID, context.Items));
+                this.Ingredients.Add(this.GetItem(ingredient.UpgradeID, context.Items), ingredient.Count);
 
             // update each ingredient's recipe list to allow travel up the crafting tree
-            foreach (var ingredient in this.Ingredients)
+            foreach (var ingredient in this.Ingredients.Keys)
                 ingredient.DependentRecipes.Add(this);
 
             this._outputItem.GeneratingRecipes.Add(this);

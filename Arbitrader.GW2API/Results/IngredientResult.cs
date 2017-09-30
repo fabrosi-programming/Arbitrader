@@ -16,7 +16,7 @@ namespace Arbitrader.GW2API.Results
         /// <summary>
         /// Gets or sets the number of the the ingredient required by its recipe.
         /// </summary>
-        public int? count { get; set; }
+        public int count { get; set; }
 
         /// <summary>
         /// Returns a <see cref="IngredientEntity"/> that contains the data from the <see cref="IngredientResult"/>.

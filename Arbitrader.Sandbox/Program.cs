@@ -32,6 +32,11 @@ namespace Arbitrader.Sandbox
                 Description = "Replace existing data",
                 Action = () => RefreshDataFromAPI(true)
             });
+            menu.AddOption('w', new ConsoleMenu.MenuOption()
+            {
+                Description = "Modify watched items",
+                Action = () => ModifyWatchedItems()
+            });
 
             menu.Display();
         }
@@ -42,14 +47,14 @@ namespace Arbitrader.Sandbox
         /// <param name="replace">Indicates whether the user selection will append to or replace existing data.</param>
         private static void RefreshDataFromAPI(bool replace)
         {
-            var context = new ItemContext(continueOnError: true);
+            var context = new ItemContext();
             var client = new HttpClient();
 
             context.DataLoadStarted += (sender, e) => Console.WriteLine($"Started loading data for {e.Count} ids from resource \"{e.Resource}\"");
             context.DataLoadFinished += (sender, e) => Console.WriteLine($"Finished loading data from resource \"{e.Resource}\"");
             context.DataLoadStatusUpdate += (sender, e) => Console.WriteLine($"Resource: {e.Resource}\t\tCount: {e.Count}\t\tMessage: {e.Message}");
 
-            var menu = new ConsoleMenu(replace ? "Select data resource to replace:" : "Select data resource to refresh:");
+            var menu = new ConsoleMenu($"Select data resource to {(replace ? "replace" : "refresh")}:");
             var action = replace ? "Replacing" : "Refreshing";
 
             menu.AddOption('i', new ConsoleMenu.MenuOption()
@@ -108,6 +113,74 @@ namespace Arbitrader.Sandbox
 
                     var elapsed = DateTime.Now - startTime;
                     Console.WriteLine($"Done. ({elapsed.TotalSeconds} s)");
+                }
+            });
+
+            menu.Display();
+        }
+
+        private static void ModifyWatchedItems()
+        {
+            var context = new ItemContext();
+
+            var menu = new ConsoleMenu("Select an option:");
+            menu.AddOption('a', new ConsoleMenu.MenuOption()
+            {
+                Description = "Add watched items by a search pattern",
+                Action = () =>
+                {
+                    Console.WriteLine("Enter a search pattern:");
+                    var pattern = Console.ReadLine();
+
+                    try
+                    {
+                        context.AddWatchedItems(pattern);
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                }
+            });
+            menu.AddOption('c', new ConsoleMenu.MenuOption()
+            {
+                Description = "Clear watched items",
+                Action = () => context.ClearWatchedItems()
+            });
+            menu.AddOption('r', new ConsoleMenu.MenuOption()
+            {
+                Description = "Remove watched item by a search pattern",
+                Action = () =>
+                {
+                    Console.WriteLine("Enter a search pattern:");
+                    var pattern = Console.ReadLine();
+
+                    try
+                    {
+                        context.RemoveWatchedItem(pattern);
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                }
+            });
+            menu.AddOption('m', new ConsoleMenu.MenuOption()
+            {
+                Description = "Remove watched item by an exact match",
+                Action = () =>
+                {
+                    Console.WriteLine("Enter the name of the watched item to remove:");
+                    var name = Console.ReadLine();
+
+                    try
+                    {
+                        context.RemoveWatchedItem(name, false);
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
                 }
             });
 

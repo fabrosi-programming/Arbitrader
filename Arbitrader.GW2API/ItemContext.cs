@@ -14,6 +14,7 @@ using Arbitrader.GW2API.Results;
 using System.Collections.ObjectModel;
 using Arbitrader.GW2API.Model;
 using Arbitrader.GW2API.Entities;
+using System.Diagnostics;
 
 namespace Arbitrader.GW2API
 {
@@ -122,12 +123,12 @@ namespace Arbitrader.GW2API
         /// <summary>
         /// The set of recipes contained by the context.
         /// </summary>
-        private Collection<Recipe> _recipes = new Collection<Recipe>();
+        private List<Recipe> _recipes = new List<Recipe>();
 
         /// <summary>
         /// The set of items contained by the context.
         /// </summary>
-        internal Collection<Item> Items = new Collection<Item>();
+        internal List<Item> Items = new List<Item>();
 
         /// <summary>
         /// Initializes a new instance of <see cref="ItemContext"/>.
@@ -167,7 +168,16 @@ namespace Arbitrader.GW2API
                         this.UploadToDatabase<RecipeResult, RecipeEntity>(client, resource, entities.Recipes, entities);
                         break;
                     case APIResource.CommerceListings:
-                        this.UploadToDatabase<ListingResult, ListingEntity>(client, resource, entities.Listings, entities);
+                        var ids = entities.WatchedItems.Select(i => i.APIID).ToList();
+                        
+                        // default to everything if the WatchedItems table is empty
+                        if (ids.Count == 0)
+                            ids = entities.Items.Select(i => i.APIID).ToList();
+
+                        this.BuildModel();
+                        ids = this.IncludeIngredientTree(ids);
+                        ids = this.ExcludeNonSellableIds(ids);
+                        this.UploadToDatabase<ListingResult, ListingEntity>(client, resource, entities.Listings, entities, ids);
                         break;
                     default:
                         break;
@@ -185,8 +195,8 @@ namespace Arbitrader.GW2API
             {
                 this.LoadEntities(entities);
 
-                this.Items = new Collection<Item>();
-                this._recipes = new Collection<Recipe>();
+                this.Items = new List<Item>();
+                this._recipes = new List<Recipe>();
 
                 foreach (var entity in entities.Items)
                     this.Items.Add(new Item(entity));
@@ -194,6 +204,64 @@ namespace Arbitrader.GW2API
                 foreach (var entity in entities.Recipes)
                     this._recipes.Add(new Recipe(entity, this));
             }
+        }
+
+        /// <summary>
+        /// Adds all items whose names contain the given pattern to the list of watched items.
+        /// </summary>
+        /// <param name="pattern">The string pattern to search for.</param>
+        public void AddWatchedItems(string pattern)
+        {
+            var entities = new ArbitraderEntities();
+
+            if (!entities.Items.Any())
+                throw new InvalidOperationException("Unable to add watched items before items have been loaded into the database.");
+
+            var existingWatchedIDs = entities.WatchedItems.Select(i => i.APIID);
+            var newWatchItems = entities.Items.Where(i => i.Name.ToUpper().Contains(pattern.ToUpper()))
+                                              .Where(i => !existingWatchedIDs.Contains(i.ID));
+
+            foreach (var item in newWatchItems)
+                entities.WatchedItems.Add(new WatchedItem(item.APIID));
+
+            entities.SaveChanges();
+        }
+
+        /// <summary>
+        /// Clears the entire list of watched items.
+        /// </summary>
+        public void ClearWatchedItems()
+        {
+            var entities = new ArbitraderEntities();
+            entities.WatchedItems.RemoveRange(entities.WatchedItems);
+            entities.SaveChanges();
+        }
+
+        /// <summary>
+        /// Removes items from the list of watched items by checking their names against the given string pattern.
+        /// </summary>
+        /// <param name="pattern">The string pattern to search for.</param>
+        /// <param name="substring">If true, the pattern may match only a substring of the names of items
+        /// to be removed. If false, it must match the entire name.</param>
+        public void RemoveWatchedItem(string pattern, bool substring = true)
+        {
+            var entities = new ArbitraderEntities();
+
+            if (!entities.Items.Any())
+                throw new InvalidOperationException("Unable to remove watched items before items have been loaded into the database.");
+
+            IEnumerable<int> matchingIDs;
+
+            if (substring)
+                matchingIDs = entities.Items.Where(i => i.Name.ToUpper().Contains(pattern.ToUpper()))
+                                            .Select(i => i.APIID);
+            else
+                matchingIDs = entities.Items.Where(i => String.Compare(i.Name, pattern, true) == 0)
+                                            .Select(i => i.APIID);
+
+            var watchItemsToRemove = entities.WatchedItems.Where(i => matchingIDs.Contains(i.APIID));
+            entities.WatchedItems.RemoveRange(watchItemsToRemove);
+            entities.SaveChanges();
         }
 
         /// <summary>
@@ -211,6 +279,7 @@ namespace Arbitrader.GW2API
             entities.Recipes.Load();
             entities.RecipeFlags.Load();
 
+            entities.WatchedItems.Load();
             entities.Listings.Load();
             entities.IndividualListings.Load();
         }
@@ -232,12 +301,6 @@ namespace Arbitrader.GW2API
         /// <param name="entities">An interface for item, recipe, and market data stored in the Arbitrader SQL database.</param>
         private void DeleteExistingData(APIResource resource, ArbitraderEntities entities)
         {
-            if (resource == APIResource.CommerceListings || resource == APIResource.Recipes || resource == APIResource.Items)
-            {
-                entities.IndividualListings.RemoveRange(entities.IndividualListings);
-                entities.Listings.RemoveRange(entities.Listings);
-            }
-
             if (resource == APIResource.Recipes || resource == APIResource.Items)
             {
                 entities.Disciplines.RemoveRange(entities.Disciplines);
@@ -270,7 +333,23 @@ namespace Arbitrader.GW2API
             where E : Entity
         {
             var ids = GetIds(client, resource, targetDataSet);
+            this.UploadToDatabase<R, E>(client, resource, targetDataSet, entities, ids);
+        }
 
+        /// <summary>
+        /// Gets results from the GW2 API and saves those results to the SQL database.
+        /// </summary>
+        /// <typeparam name="R">The result type that query results from the GW2 API are to be filtered into.</typeparam>
+        /// <typeparam name="E">The entity type that is to be used to save the result data to the SQL database.</typeparam>
+        /// <param name="client">The HTTP client used to interact with the GW2 API.</param>
+        /// <param name="resource">The type of resource to get data for.</param>
+        /// <param name="targetDataSet">The dataset containing entities to be populated from results from the GW2 API.</param>
+        /// <param name="entities">An interface for item, recipe, and market data stored in the Arbitrader SQL database.</param>
+        /// <param name="ids">The unique identifiers in the GW2 API for the items for which data is to be retrieved.</param>
+        private void UploadToDatabase<R, E>(HttpClient client, APIResource resource, DbSet<E> targetDataSet, ArbitraderEntities entities, IEnumerable<int> ids)
+            where R : APIDataResult
+            where E : Entity
+        {
             if (ids == null)
                 return;
 
@@ -296,6 +375,42 @@ namespace Arbitrader.GW2API
 
             this.SaveChanges(resource, targetDataSet, entities, result);
             this.OnDataLoadFinished(new DataLoadEventArgs(resource, null));
+        }
+
+        /// <summary>
+        /// Given a set of item IDs, includes all item IDs for possible ingredients to those items. Recursively
+        /// gets ids all the way to raw materials
+        /// </summary>
+        /// <param name="ids">The set of item IDs to be appended to.</param>
+        private List<int> IncludeIngredientTree(List<int> ids)
+        {
+            var items = this.Items.Where(i => ids.Contains(i.ID)).ToList();
+            var subItems = new List<Item>();
+
+            foreach (var item in items)
+                foreach (var recipe in item.GeneratingRecipes)
+                    subItems.AddRange(recipe.IngredientTreeNodes);
+
+            items.AddRange(subItems.Except(items).Distinct());
+
+            return items.Select(i => i.ID).ToList();
+        }
+
+        /// <summary>
+        /// Given a set of item IDs, excludes those IDs that are for items that cannot be traded on the trading post.
+        /// </summary>
+        /// <param name="ids">The unique identifiers in the GW2 API of the items to be filtered.</param>
+        /// <returns>The original list of unique identifiers except those that are for items that cannot be traded on
+        /// the trading post.</returns>
+        private List<int> ExcludeNonSellableIds(List<int> ids)
+        {
+            var items = this.Items.Where(i => ids.Contains(i.ID))
+                                  .Where(i => !i.Flags.Contains(Flag.NoSell))
+                                  .Where(i => !i.Flags.Contains(Flag.AccountBound))
+                                  .Where(i => !i.Flags.Contains(Flag.MonsterOnly))
+                                  .Where(i => !i.Flags.Contains(Flag.SoulbindOnAcquire));
+            return items.Select(i => i.ID)
+                        .ToList();
         }
 
         /// <summary>
@@ -377,16 +492,20 @@ namespace Arbitrader.GW2API
             var listURL = $"{baseURL}/{resource.GetPath()}";
             var singleResultURL = $"{listURL}/{id}";
 
-            var retryCount = 1;
+            var retryCount = 0;
 
-            while (retryCount <= this._maxRetryCount)
+            while (retryCount < this._maxRetryCount)
             {
                 var singleResultResponse = client.GetAsync(singleResultURL).Result;
 
                 if (singleResultResponse.IsSuccessStatusCode)
                 {
+                    Debug.WriteLine($"Resource : {resource} | ID : {id} | Retry Count : {retryCount}");
                     return singleResultResponse.Content.ReadAsAsync<R>().Result.ToEntity();
                 }
+
+                if (singleResultResponse.ReasonPhrase == "Not Found")
+                    return null;
 
                 retryCount += 1;
             }

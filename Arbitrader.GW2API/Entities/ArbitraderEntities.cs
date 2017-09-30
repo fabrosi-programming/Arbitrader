@@ -58,5 +58,10 @@ namespace Arbitrader.GW2API.Entities
         /// The set of individual price points listed on the market per item.
         /// </summary>
         public virtual DbSet<IndividualListingEntity> IndividualListings { get; set; }
+
+        /// <summary>
+        /// The set of items for which market listings are watched.
+        /// </summary>
+        public virtual DbSet<WatchedItem> WatchedItems { get; set; }
     }
 }

@@ -72,6 +72,7 @@
     <Compile Include="Entities\RecipeEntity.cs" />
     <Compile Include="Entities\RecipeFlagEntity.cs" />
     <Compile Include="Entities\IndividualListingEntity.cs" />
+    <Compile Include="Entities\WatchedItem.cs" />
     <Compile Include="Model\Rarity.cs" />
     <Compile Include="Model\ItemType.cs" />
     <Compile Include="Model\RecipeType.cs" />
@@ -102,7 +103,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="Database\Arbitrader.GW2API.DataModel.bak" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

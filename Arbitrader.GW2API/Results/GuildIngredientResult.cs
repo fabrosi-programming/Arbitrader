@@ -18,7 +18,7 @@ namespace Arbitrader.GW2API.Results
         /// <summary>
         /// Gets or sets the number of the ingredient required for the guild hall upgrade.
         /// </summary>
-        public int? count { get; set; }
+        public int count { get; set; }
 
         /// <summary>
         /// Returns a <see cref="GuildIngredientEntity"/> that contains the data from the <see cref="GuildIngredientResult"/>.

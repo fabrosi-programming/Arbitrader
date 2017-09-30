@@ -39,7 +39,7 @@ namespace Arbitrader.GW2API.Model
         /// <summary>
         /// The list of flags assigned to the item.
         /// </summary>
-        private Collection<Flag> _flags = new Collection<Flag>();
+        internal List<Flag> Flags { get; set; } = new List<Flag>();
 
         /// <summary>
         /// Gets or sets the name of the item.
@@ -54,12 +54,12 @@ namespace Arbitrader.GW2API.Model
         /// <summary>
         /// Gets or sets the list of recipes that require the item in order to be crafted.
         /// </summary>
-        internal Collection<Recipe> DependentRecipes { get; set; } = new Collection<Recipe>();
+        internal List<Recipe> DependentRecipes { get; set; } = new List<Recipe>();
 
         /// <summary>
         /// Gets or sets the list of recipes for which the item is the output item.
         /// </summary>
-        internal Collection<Recipe> GeneratingRecipes { get; set; } = new Collection<Recipe>();
+        internal List<Recipe> GeneratingRecipes { get; set; } = new List<Recipe>();
 
         /// <summary>
         /// Initializes a new instance of <see cref="Item"/> from an existing entity.
@@ -76,8 +76,8 @@ namespace Arbitrader.GW2API.Model
             this.Name = itemEntity.Name;
             this.ID = itemEntity.APIID;
 
-            foreach (var flagResult in itemEntity.Flags)
-                this._flags.Add((Flag)Enum.Parse(typeof(Flag), flagResult.Name));
+            foreach (var flagEntity in itemEntity.Flags)
+                this.Flags.Add((Flag)Enum.Parse(typeof(Flag), flagEntity.Name));
         }
 
         /// <summary>
