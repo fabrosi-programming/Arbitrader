@@ -121,6 +121,11 @@ namespace Arbitrader.GW2API
         private bool _continueOnError = true;
 
         /// <summary>
+        /// True if the item/recipe mode has been built; false if not.
+        /// </summary>
+        private bool _isModelBuilt = false;
+
+        /// <summary>
         /// The set of recipes contained by the context.
         /// </summary>
         private List<Recipe> _recipes = new List<Recipe>();
@@ -162,9 +167,11 @@ namespace Arbitrader.GW2API
                 switch (resource)
                 {
                     case APIResource.Items:
+                        this._isModelBuilt = false;
                         this.UploadToDatabase<ItemResult, ItemEntity>(client, resource, entities.Items, entities);
                         break;
                     case APIResource.Recipes:
+                        this._isModelBuilt = false;
                         this.UploadToDatabase<RecipeResult, RecipeEntity>(client, resource, entities.Recipes, entities);
                         break;
                     case APIResource.CommerceListings:
@@ -174,7 +181,7 @@ namespace Arbitrader.GW2API
                         if (ids.Count == 0)
                             ids = entities.Items.Select(i => i.APIID).ToList();
 
-                        this.BuildModel();
+                        this.BuildModel(entities);
                         ids = this.IncludeIngredientTree(ids);
                         ids = this.ExcludeNonSellableIds(ids);
                         this.UploadToDatabase<ListingResult, ListingEntity>(client, resource, entities.Listings, entities, ids);
@@ -189,21 +196,20 @@ namespace Arbitrader.GW2API
         /// Takes the data that has been loaded to the SQL database for items and recipes and constructs
         /// model objects to represent that data and its relationships.
         /// </summary>
-        public void BuildModel()
+        public void BuildModel(ArbitraderEntities entities)
         {
-            using (var entities = new ArbitraderEntities())
-            {
-                this.LoadEntities(entities);
+            this._isModelBuilt = false;
 
-                this.Items = new List<Item>();
-                this._recipes = new List<Recipe>();
+            this.Items = new List<Item>();
+            this._recipes = new List<Recipe>();
 
-                foreach (var entity in entities.Items)
-                    this.Items.Add(new Item(entity));
+            foreach (var entity in entities.Items)
+                this.Items.Add(new Item(entity));
 
-                foreach (var entity in entities.Recipes)
-                    this._recipes.Add(new Recipe(entity, this));
-            }
+            foreach (var entity in entities.Recipes)
+                this._recipes.Add(new Recipe(entity, this));
+
+            this._isModelBuilt = true;
         }
 
         /// <summary>
