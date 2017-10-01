@@ -15,7 +15,7 @@ namespace Arbitrader.GW2API.Model
         /// <summary>
         /// The unique identifier in the GW2 API for the recipe.
         /// </summary>
-        private int _id;
+        public int ID;
 
         /// <summary>
         /// The type of the recipe.
@@ -79,10 +79,10 @@ namespace Arbitrader.GW2API.Model
         /// </summary>
         /// <param name="recipeEntity">The entity containing the descriptors for the recipe.</param>
         /// <param name="context">The database context used to resolve item IDs to instances of <see cref="Item"/>.</param>
-        internal Recipe(RecipeEntity recipeEntity, ItemContext context)
+        internal Recipe(RecipeEntity recipeEntity, IEnumerable<ItemEntity> itemEntities, ItemContext context)
         {
             this._type = Enum.TryParse(recipeEntity.Type, out RecipeType type) ? type : RecipeType.Unknown;
-            this._outputItem = this.GetItem(recipeEntity.OutputItemID.Value, context.Items);
+            this._outputItem = this.GetItem(recipeEntity.OutputItemID.Value, context.Items, itemEntities);
             this._outputItemCount = recipeEntity.OutputItemCount ?? 0;
 
             foreach (var disciplineResult in recipeEntity.Disciplines)
@@ -92,10 +92,10 @@ namespace Arbitrader.GW2API.Model
                 this._flags.Add((Flag)Enum.Parse(typeof(Flag), flagResult.Name));
 
             foreach (var ingredient in recipeEntity.Ingredients)
-                this.Ingredients.Add(this.GetItem(ingredient.ItemID, context.Items), ingredient.Count);
+                this.Ingredients.Add(this.GetItem(ingredient.ItemID, context.Items, itemEntities), ingredient.Count);
 
             foreach (var ingredient in recipeEntity.GuildIngredients)
-                this.Ingredients.Add(this.GetItem(ingredient.UpgradeID, context.Items), ingredient.Count);
+                this.Ingredients.Add(this.GetItem(ingredient.UpgradeID, context.Items, itemEntities), ingredient.Count);
 
             // update each ingredient's recipe list to allow travel up the crafting tree
             foreach (var ingredient in this.Ingredients.Keys)
@@ -110,10 +110,17 @@ namespace Arbitrader.GW2API.Model
         /// <param name="itemId">The unique identifier to be resolved.</param>
         /// <param name="items">The collection of <see cref="Item"/> to search for the given unique identifier.</param>
         /// <returns></returns>
-        internal Item GetItem(int itemId, IEnumerable<Item> items)
+        internal Item GetItem(int itemId, List<Item> items, IEnumerable<ItemEntity> itemEntities)
         {
-            return items.Where(i => i.ID == itemId)
-                        .First();
+            var existingItems = items.Where(i => i.ID == itemId);
+
+            if (existingItems.Any())
+                return existingItems.First();
+
+            var entity = itemEntities.Where(i => i.APIID == itemId).First();
+            items.Add(new Item(entity));
+
+            return existingItems.First();
         }
 
         /// <summary>

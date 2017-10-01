@@ -126,6 +126,11 @@ namespace Arbitrader.GW2API
         private bool _isModelBuilt = false;
 
         /// <summary>
+        /// The last HTTP client that was used to get results from the GW2 API.
+        /// </summary>
+        private HttpClient _httpClient;
+
+        /// <summary>
         /// The set of recipes contained by the context.
         /// </summary>
         private List<Recipe> _recipes = new List<Recipe>();
@@ -155,6 +160,7 @@ namespace Arbitrader.GW2API
         /// <param name="replace">Determines whether existing data in the database is overwritten or appended to.</param>
         public void Load(HttpClient client, APIResource resource, bool replace)
         {
+            this._httpClient = client;
             this.InitializeHttpClient(client);
 
             using (var entities = new ArbitraderEntities())
@@ -175,19 +181,13 @@ namespace Arbitrader.GW2API
                         this.UploadToDatabase<RecipeResult, RecipeEntity>(client, resource, entities.Recipes, entities);
                         break;
                     case APIResource.CommerceListings:
-                        var ids = entities.WatchedItems.Select(i => i.APIID).ToList();
-                        
-                        // default to everything if the WatchedItems table is empty
-                        if (ids.Count == 0)
-                            ids = entities.Items.Select(i => i.APIID).ToList();
-
                         this.BuildModel(entities);
-                        ids = this.IncludeIngredientTree(ids);
-                        ids = this.ExcludeNonSellableIds(ids);
+                        this.Items = this.ExcludeNonSellableIds(this.Items);
+                        var ids = this.Items.Select(i => i.ID);
                         this.UploadToDatabase<ListingResult, ListingEntity>(client, resource, entities.Listings, entities, ids);
                         break;
                     default:
-                        break;
+                        throw new ArgumentException($"Unable to load data for API resource \"{nameof(resource)}\".", nameof(resource));
                 }
             }
         }
@@ -200,14 +200,31 @@ namespace Arbitrader.GW2API
         {
             this._isModelBuilt = false;
 
+            IEnumerable<ItemEntity> watchedItems;
+            IEnumerable<RecipeEntity> watchedRecipes;
+
+            if (entities.WatchedItems.Any())
+            {
+                var watchedItemIDs = entities.WatchedItems.Select(i => i.APIID);
+                watchedItems = entities.Items.Where(i => watchedItemIDs.Contains(i.APIID));
+                watchedRecipes = entities.Recipes.Where(r => r.OutputItemID.HasValue && watchedItemIDs.Contains(r.OutputItemID.Value));
+            }
+            else
+            {
+                watchedItems = entities.Items;
+                watchedRecipes = entities.Recipes;
+            }
+
             this.Items = new List<Item>();
             this._recipes = new List<Recipe>();
 
-            foreach (var entity in entities.Items)
-                this.Items.Add(new Item(entity));
+            foreach (var entity in watchedItems)
+                if (!this.Items.Select(i => i.ID).Contains(entity.APIID))
+                    this.Items.Add(new Item(entity));
 
-            foreach (var entity in entities.Recipes)
-                this._recipes.Add(new Recipe(entity, this));
+            foreach (var entity in watchedRecipes)
+                if (!this._recipes.Select(r => r.ID).Contains(entity.APIID))
+                    this._recipes.Add(new Recipe(entity, entities.Items, this));
 
             this._isModelBuilt = true;
         }
@@ -384,38 +401,17 @@ namespace Arbitrader.GW2API
         }
 
         /// <summary>
-        /// Given a set of item IDs, includes all item IDs for possible ingredients to those items. Recursively
-        /// gets ids all the way to raw materials
-        /// </summary>
-        /// <param name="ids">The set of item IDs to be appended to.</param>
-        private List<int> IncludeIngredientTree(List<int> ids)
-        {
-            var items = this.Items.Where(i => ids.Contains(i.ID)).ToList();
-            var subItems = new List<Item>();
-
-            foreach (var item in items)
-                foreach (var recipe in item.GeneratingRecipes)
-                    subItems.AddRange(recipe.IngredientTreeNodes);
-
-            items.AddRange(subItems.Except(items).Distinct());
-
-            return items.Select(i => i.ID).ToList();
-        }
-
-        /// <summary>
         /// Given a set of item IDs, excludes those IDs that are for items that cannot be traded on the trading post.
         /// </summary>
-        /// <param name="ids">The unique identifiers in the GW2 API of the items to be filtered.</param>
+        /// <param name="items">The unique identifiers in the GW2 API of the items to be filtered.</param>
         /// <returns>The original list of unique identifiers except those that are for items that cannot be traded on
         /// the trading post.</returns>
-        private List<int> ExcludeNonSellableIds(List<int> ids)
+        private List<Item> ExcludeNonSellableIds(IEnumerable<Item> items)
         {
-            var items = this.Items.Where(i => ids.Contains(i.ID))
-                                  .Where(i => !i.Flags.Contains(Flag.NoSell))
-                                  .Where(i => !i.Flags.Contains(Flag.AccountBound))
-                                  .Where(i => !i.Flags.Contains(Flag.MonsterOnly))
-                                  .Where(i => !i.Flags.Contains(Flag.SoulbindOnAcquire));
-            return items.Select(i => i.ID)
+            return items.Where(i => !i.Flags.Contains(Flag.NoSell))
+                        .Where(i => !i.Flags.Contains(Flag.AccountBound))
+                        .Where(i => !i.Flags.Contains(Flag.MonsterOnly))
+                        .Where(i => !i.Flags.Contains(Flag.SoulbindOnAcquire))
                         .ToList();
         }
 
