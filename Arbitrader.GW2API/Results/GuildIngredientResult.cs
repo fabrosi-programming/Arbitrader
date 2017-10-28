@@ -8,7 +8,7 @@ namespace Arbitrader.GW2API.Results
     /// <summary>
     /// A sub-result of a Recipe query to the GW2 API. Specifies a guild ingredient required to craft a recipe.
     /// </summary>
-    public class GuildIngredientResult : APIDataResult
+    public class GuildIngredientResult : APIDataResult<GuildIngredientEntity>
     {
         /// <summary>
         /// Gets or sets the unique identifier in the GW2 API for the guild hall upgrade that requires the ingredient.
@@ -24,9 +24,15 @@ namespace Arbitrader.GW2API.Results
         /// Returns a <see cref="GuildIngredientEntity"/> that contains the data from the <see cref="GuildIngredientResult"/>.
         /// </summary>
         /// <returns>A <see cref="GuildIngredientEntity"/> that contains the data from the <see cref="GuildIngredientResult"/>.</returns>
-        internal override Entity ToEntity()
+        internal override GuildIngredientEntity ToEntity()
         {
-            return (GuildIngredientEntity)this;
+            return new GuildIngredientEntity()
+            {
+                APIID = this.id,
+                LoadDate = this.LoadDate,
+                UpgradeID = this.upgrade_id,
+                Count = this.count
+            };
         }
     }
 }

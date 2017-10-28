@@ -25,21 +25,5 @@ namespace Arbitrader.GW2API.Entities
         /// Gets or sets the total number of units available at this price point.
         /// </summary>
         public int Quantity { get; set; }
-
-        /// <summary>
-        /// Converts from <see cref="IndividualListingResult"/> to its associated entity, <see cref="IndividualListingEntity"/>.
-        /// </summary>
-        /// <param name="result">A result containing the data to be mapped to the entity.</param>
-        public static implicit operator IndividualListingEntity(IndividualListingResult result)
-        {
-            return new IndividualListingEntity()
-            {
-                APIID = result.id,
-                LoadDate = result.LoadDate,
-                ListingCount = result.listings,
-                UnitPrice = result.unit_price,
-                Quantity = result.quantity
-            };
-        }
     }
 }

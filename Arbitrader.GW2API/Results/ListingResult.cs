@@ -3,7 +3,7 @@ using Arbitrader.GW2API.Entities;
 
 namespace Arbitrader.GW2API.Results
 {
-    public class ListingResult : APIDataResult
+    public class ListingResult : APIDataResult<ListingEntity>
     {
         /// <summary>
         /// Gets or sets the list of all buy orders for the item referenced by the listing.
@@ -19,9 +19,29 @@ namespace Arbitrader.GW2API.Results
         /// Returns a <see cref="ListingEntity"/> that contains the data from the <see cref="ListingResult"/>.
         /// </summary>
         /// <returns>A <see cref="ListingEntity"/> that contains the data from the <see cref="ListingResult"/>.</returns>
-        internal override Entity ToEntity()
+        internal override ListingEntity ToEntity()
         {
-            return (ListingEntity)this;
+            var entity = new ListingEntity()
+            {
+                APIID = this.id,
+                LoadDate = this.LoadDate
+            };
+
+            foreach (var individualthis in this.buys)
+            {
+                var individualEntity = individualthis.ToEntity();
+                individualEntity.Direction = "Buy";
+                entity.IndividualListings.Add(individualEntity);
+            }
+
+            foreach (var individualthis in this.sells)
+            {
+                var individualEntity = individualthis.ToEntity();
+                individualEntity.Direction = "Sell";
+                entity.IndividualListings.Add(individualEntity);
+            }
+
+            return entity;
         }
     }
 }

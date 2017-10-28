@@ -8,7 +8,8 @@ namespace Arbitrader.GW2API.Results
     /// <summary>
     /// The base class for all results obtained from the GW2 API.
     /// </summary>
-    public abstract class APIDataResult
+    public abstract class APIDataResult<TEntity>
+        where TEntity : Entity
     {
         /// <summary>
         /// Gets or sets the unique identifier in the GW2 API for the result associated with the entity.
@@ -32,6 +33,6 @@ namespace Arbitrader.GW2API.Results
         /// Returns a database entity that contains the data from the <see cref="APIDataResult"/>.
         /// </summary>
         /// <returns>A database entity that contains the data from the <see cref="APIDataResult"/>.</returns>
-        internal abstract Entity ToEntity();
+        internal abstract TEntity ToEntity();
     }
 }

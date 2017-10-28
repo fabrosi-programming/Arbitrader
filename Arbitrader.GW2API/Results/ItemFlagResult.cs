@@ -6,7 +6,7 @@ namespace Arbitrader.GW2API.Results
     /// <summary>
     /// A sub-result of an Item query to the GW2 API. Specifies a single flag assigned to an item.
     /// </summary>
-    public class ItemFlagResult : APIDataResult
+    public class ItemFlagResult : APIDataResult<ItemFlagEntity>
     {
         /// <summary>
         /// Gets or sets the name of the item flag.
@@ -29,9 +29,14 @@ namespace Arbitrader.GW2API.Results
         /// Returns a <see cref="ItemFlagEntity"/> that contains the data from the <see cref="ItemFlagResult"/>.
         /// </summary>
         /// <returns>A <see cref="ItemFlagEntity"/> that contains the data from the <see cref="ItemFlagResult"/>.</returns>
-        internal override Entity ToEntity()
+        internal override ItemFlagEntity ToEntity()
         {
-            return (ItemFlagEntity)this;
+            return new ItemFlagEntity()
+            {
+                APIID = this.id,
+                LoadDate = this.LoadDate,
+                Name = this.name
+            };
         }
     }
 }

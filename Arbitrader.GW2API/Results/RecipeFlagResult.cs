@@ -6,7 +6,7 @@ namespace Arbitrader.GW2API.Results
     /// <summary>
     /// A sub-result of a Recipe query to the GW2 API. Specifies a single flag associated with a single recipe.
     /// </summary>
-    public class RecipeFlagResult : APIDataResult
+    public class RecipeFlagResult : APIDataResult<RecipeFlagEntity>
     {
         /// <summary>
         /// Gets or sets the name of the recipe flag.
@@ -29,9 +29,14 @@ namespace Arbitrader.GW2API.Results
         /// Returns a <see cref="RecipeFlagEntity"/> that contains the data from the <see cref="RecipeFlagResult"/>.
         /// </summary>
         /// <returns>A <see cref="RecipeFlagEntity"/> that contains the data from the <see cref="RecipeFlagResult"/>.</returns>
-        internal override Entity ToEntity()
+        internal override RecipeFlagEntity ToEntity()
         {
-            return (RecipeFlagEntity)this;
+            return new RecipeFlagEntity()
+            {
+                APIID = this.id,
+                LoadDate = this.LoadDate,
+                Name = this.name
+            };
         }
     }
 }

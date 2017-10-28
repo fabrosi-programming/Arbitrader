@@ -55,35 +55,5 @@ namespace Arbitrader.GW2API.Entities
         /// Gets or sets the list of guild ingredients required to craft the recipe.
         /// </summary>
         public IList<GuildIngredientEntity> GuildIngredients { get; set; } = new List<GuildIngredientEntity>();
-
-        /// <summary>
-        /// Converts from <see cref="RecipeResult"/> to its associated entity, <see cref="RecipeEntity"/>.
-        /// </summary>
-        /// <param name="result">A result containing the data to be mapped to the entity.</param>
-        public static implicit operator RecipeEntity(RecipeResult result)
-        {
-            return new RecipeEntity()
-            {
-                APIID = result.id,
-                LoadDate = result.LoadDate,
-                Type = result.type,
-                OutputItemID = result.output_item_id,
-                OutputItemCount = result.output_item_count,
-                MinimumRating = result.min_rating,
-                OutputUpgradeID = result.output_upgrade_id,
-                Disciplines = result.disciplines
-                                    .Select(d => (DisciplineEntity)d)
-                                    .ToList(),
-                Flags = result.flags
-                              .Select(f => (RecipeFlagEntity)f)
-                              .ToList(),
-                Ingredients = result.ingredients
-                                    .Select(i => (IngredientEntity)i)
-                                    .ToList(),
-                GuildIngredients = result.guild_ingredients
-                                         .Select(i => (GuildIngredientEntity)i)
-                                         .ToList()
-            };
-        }
     }
 }

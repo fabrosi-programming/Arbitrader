@@ -18,19 +18,5 @@ namespace Arbitrader.GW2API.Entities
         /// Gets or sets the name of the item flag.
         /// </summary>
         public string Name { get; set; }
-
-        /// <summary>
-        /// Converts from <see cref="ItemFlagResult"/> to its associated entity, <see cref="ItemFlagEntity"/>.
-        /// </summary>
-        /// <param name="result">A result containing the data to be mapped to the entity.</param>
-        public static implicit operator ItemFlagEntity(ItemFlagResult result)
-        {
-            return new ItemFlagEntity()
-            {
-                APIID = result.id,
-                LoadDate = result.LoadDate,
-                Name = result.name
-            };
-        }
     }
 }

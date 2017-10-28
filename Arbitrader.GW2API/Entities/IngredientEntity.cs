@@ -23,20 +23,5 @@ namespace Arbitrader.GW2API.Entities
         /// Gets or sets the number of the the ingredient required by its recipe.
         /// </summary>
         public int Count { get; set; }
-
-        /// <summary>
-        /// Converts from <see cref="IngredientResult"/> to its associated entity, <see cref="IngredientEntity"/>.
-        /// </summary>
-        /// <param name="result">A result containing the data to be mapped to the entity.</param>
-        public static implicit operator IngredientEntity(IngredientResult result)
-        {
-            return new IngredientEntity()
-            {
-                APIID = result.id,
-                LoadDate = result.LoadDate,
-                ItemID = result.item_id,
-                Count = result.count
-            };
-        }
     }
 }

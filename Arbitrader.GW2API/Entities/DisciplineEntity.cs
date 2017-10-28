@@ -13,19 +13,5 @@ namespace Arbitrader.GW2API.Entities
         /// Gets or sets the name of the discipline.
         /// </summary>
         public string Name { get; set; }
-
-        /// <summary>
-        /// Converts from <see cref="DisciplineResult"/> to its associated entity, <see cref="DisciplineEntity"/>.
-        /// </summary>
-        /// <param name="result">A result containing the data to be mapped to the entity.</param>
-        public static implicit operator DisciplineEntity(DisciplineResult result)
-        {
-            return new DisciplineEntity()
-            {
-                APIID = result.id,
-                LoadDate = result.LoadDate,
-                Name = result.name
-            };
-        }
     }
 }

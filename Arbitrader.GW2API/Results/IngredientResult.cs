@@ -6,7 +6,7 @@ namespace Arbitrader.GW2API.Results
     /// <summary>
     /// A sub-result of a Recipe query to the GW2 API. Specifies an ingredient required to craft a recipe.
     /// </summary>
-    public class IngredientResult : APIDataResult
+    public class IngredientResult : APIDataResult<IngredientEntity>
     {
         /// <summary>
         /// Gets or sets the unique identifier in the GW2 APi for the item that is used as an ingredient.
@@ -22,9 +22,15 @@ namespace Arbitrader.GW2API.Results
         /// Returns a <see cref="IngredientEntity"/> that contains the data from the <see cref="IngredientResult"/>.
         /// </summary>
         /// <returns>A <see cref="IngredientEntity"/> that contains the data from the <see cref="IngredientResult"/>.</returns>
-        internal override Entity ToEntity()
+        internal override IngredientEntity ToEntity()
         {
-            return (IngredientEntity)this;
+            return new IngredientEntity()
+            {
+                APIID = this.id,
+                LoadDate = this.LoadDate,
+                ItemID = this.item_id,
+                Count = this.count
+            };
         }
     }
 }

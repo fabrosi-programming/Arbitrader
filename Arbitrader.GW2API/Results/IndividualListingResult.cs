@@ -3,7 +3,7 @@ using Arbitrader.GW2API.Entities;
 
 namespace Arbitrader.GW2API.Results
 {
-    public class IndividualListingResult : APIDataResult
+    public class IndividualListingResult : APIDataResult<IndividualListingEntity>
     {
         /// <summary>
         /// Gets or sets the number of individual listings at this price point.
@@ -24,9 +24,16 @@ namespace Arbitrader.GW2API.Results
         /// Returns a <see cref="IndividualListingEntity"/> that contains the data from the <see cref="IndividualListingResult"/>.
         /// </summary>
         /// <returns>A <see cref="IndividualListingEntity"/> that contains the data from the <see cref="IndividualListingResult"/>.</returns>
-        internal override Entity ToEntity()
+        internal override IndividualListingEntity ToEntity()
         {
-            return (IndividualListingEntity)this;
+            return new IndividualListingEntity()
+            {
+                APIID = this.id,
+                LoadDate = this.LoadDate,
+                ListingCount = this.listings,
+                UnitPrice = this.unit_price,
+                Quantity = this.quantity
+            };
         }
     }
 }

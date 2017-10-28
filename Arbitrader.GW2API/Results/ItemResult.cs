@@ -8,7 +8,7 @@
     /// <summary>
     /// A result from an Item query to the GW2 API.
     /// </summary>
-    public class ItemResult : APIDataResult
+    public class ItemResult : APIDataResult<ItemEntity>
     {
         /// <summary>
         /// Gets or sets the name of the item.
@@ -49,9 +49,22 @@
         /// Returns a <see cref="ItemEntity"/> that contains the data from the <see cref="ItemResult"/>.
         /// </summary>
         /// <returns>A <see cref="ItemEntity"/> that contains the data from the <see cref="ItemResult"/>.</returns>
-        internal override Entity ToEntity()
+        internal override ItemEntity ToEntity()
         {
-            return (ItemEntity)this;
+            return new ItemEntity()
+            {
+                APIID = this.id,
+                LoadDate = this.LoadDate,
+                Name = this.name,
+                Icon = this.icon,
+                Type = this.type,
+                Rarity = this.rarity,
+                Level = this.level,
+                VendorValue = this.vendor_value,
+                Flags = this.flags
+                            .Select(f => f.ToEntity())
+                            .ToList()
+            };
         }
     }
 }

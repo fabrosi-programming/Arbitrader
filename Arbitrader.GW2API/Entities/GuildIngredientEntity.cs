@@ -23,20 +23,5 @@ namespace Arbitrader.GW2API.Entities
         /// Gets or sets the number of the ingredient required for the guild hall upgrade.
         /// </summary>
         public int Count { get; set; }
-
-        /// <summary>
-        /// Converts from <see cref="GuildIngredientResult"/> to its associated entity, <see cref="GuildIngredientEntity"/>.
-        /// </summary>
-        /// <param name="result">A result containing the data to be mapped to the entity.</param>
-        public static implicit operator GuildIngredientEntity(GuildIngredientResult result)
-        {
-            return new GuildIngredientEntity()
-            {
-                APIID = result.id,
-                LoadDate = result.LoadDate,
-                UpgradeID = result.upgrade_id,
-                Count = result.count
-            };
-        }
     }
 }

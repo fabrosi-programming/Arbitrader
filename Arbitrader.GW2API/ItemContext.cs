@@ -352,7 +352,7 @@ namespace Arbitrader.GW2API
         /// <param name="targetDataSet">The dataset containing entities to be populated from results from the GW2 API.</param>
         /// <param name="entities">An interface for item, recipe, and market data stored in the Arbitrader SQL database.</param>
         private void UploadToDatabase<R, E>(HttpClient client, APIResource resource, DbSet<E> targetDataSet, ArbitraderEntities entities)
-            where R : APIDataResult
+            where R : APIDataResult<E>
             where E : Entity
         {
             var ids = GetIds(client, resource, targetDataSet);
@@ -370,7 +370,7 @@ namespace Arbitrader.GW2API
         /// <param name="entities">An interface for item, recipe, and market data stored in the Arbitrader SQL database.</param>
         /// <param name="ids">The unique identifiers in the GW2 API for the items for which data is to be retrieved.</param>
         private void UploadToDatabase<R, E>(HttpClient client, APIResource resource, DbSet<E> targetDataSet, ArbitraderEntities entities, IEnumerable<int> ids)
-            where R : APIDataResult
+            where R : APIDataResult<E>
             where E : Entity
         {
             if (ids == null)
@@ -488,7 +488,8 @@ namespace Arbitrader.GW2API
         /// <param name="id">The ID of the result to be retrieved.</param>
         /// <returns>A result for a single ID from the GW2 API for the specified resource.</returns>
         private Entity GetSingleResult<R, E>(HttpClient client, APIResource resource, int id)
-            where R : APIDataResult
+            where R : APIDataResult<E>
+            where E : Entity
         {
             var baseURL = Settings.Default.APIBaseURL;
             var listURL = $"{baseURL}/{resource.GetPath()}";

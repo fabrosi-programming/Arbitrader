@@ -7,7 +7,7 @@ namespace Arbitrader.GW2API.Results
     /// A sub-result of an Item query to the GW2 API. Specifies a single discipline and a single item
     /// that can be crafted by that discipline.
     /// </summary>
-    public class DisciplineResult : APIDataResult
+    public class DisciplineResult : APIDataResult<DisciplineEntity>
     {
         /// <summary>
         /// Gets or sets the name of the discipline.
@@ -30,9 +30,14 @@ namespace Arbitrader.GW2API.Results
         /// Returns a <see cref="DisciplineEntity"/> that contains the data from the <see cref="DisciplineResult"/>.
         /// </summary>
         /// <returns>A <see cref="DisciplineEntity"/> that contains the data from the <see cref="DisciplineResult"/>.</returns>
-        internal override Entity ToEntity()
+        internal override DisciplineEntity ToEntity()
         {
-            return (DisciplineEntity)this;
+            return new DisciplineEntity()
+            {
+                APIID = this.id,
+                LoadDate = this.LoadDate,
+                Name = this.name
+            };
         }
     }
 }

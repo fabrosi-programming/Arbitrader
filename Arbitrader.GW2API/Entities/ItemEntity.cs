@@ -48,27 +48,5 @@ namespace Arbitrader.GW2API.Entities
         /// Gets or sets the list of flags assigned to the item.
         /// </summary>
         public IList<ItemFlagEntity> Flags { get; set; } = new List<ItemFlagEntity>();
-
-        /// <summary>
-        /// Converts from <see cref="ItemResult"/> to its associated entity, <see cref="ItemEntity"/>.
-        /// </summary>
-        /// <param name="result">A result containing the data to be mapped to the entity.</param>
-        public static implicit operator ItemEntity(ItemResult result)
-        {
-            return new ItemEntity()
-            {
-                APIID = result.id,
-                LoadDate = result.LoadDate,
-                Name = result.name,
-                Icon = result.icon,
-                Type = result.type,
-                Rarity = result.rarity,
-                Level = result.level,
-                VendorValue = result.vendor_value,
-                Flags = result.flags
-                              .Select(f => (ItemFlagEntity)f.ToEntity())
-                              .ToList()
-            };
-        }
     }
 }
