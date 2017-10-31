@@ -123,6 +123,16 @@ namespace Arbitrader.GW2API.Model
             return existingItems.First();
         }
 
+        internal int GetPrice(int count)
+        {
+            var price = 0;
+
+            foreach (var ingredient in this.Ingredients)
+                price += ingredient.Key.GetBestPrice(ingredient.Value * count);
+
+            return price;
+        }
+
         /// <summary>
         /// Returns a string representation of the recipe.
         /// </summary>

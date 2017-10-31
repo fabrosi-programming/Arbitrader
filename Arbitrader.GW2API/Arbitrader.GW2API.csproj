@@ -73,6 +73,9 @@
     <Compile Include="Entities\RecipeFlagEntity.cs" />
     <Compile Include="Entities\IndividualListingEntity.cs" />
     <Compile Include="Entities\WatchedItem.cs" />
+    <Compile Include="Model\Direction.cs" />
+    <Compile Include="Model\Listing.cs" />
+    <Compile Include="Model\Listings.cs" />
     <Compile Include="Model\Rarity.cs" />
     <Compile Include="Model\ItemType.cs" />
     <Compile Include="Model\RecipeType.cs" />

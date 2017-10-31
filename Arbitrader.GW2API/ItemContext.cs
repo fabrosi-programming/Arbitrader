@@ -112,7 +112,7 @@ namespace Arbitrader.GW2API
         /// The maximum number of times a query to the GW2 API can return a failure result before the ID
         /// being queried will be skipped.
         /// </summary>
-        private int _maxRetryCount = 1000;
+        private int _maxRetryCount = 5;
 
         /// <summary>
         /// Determines whether errors saving records to the database will terminate further processing or
@@ -140,6 +140,16 @@ namespace Arbitrader.GW2API
         /// </summary>
         internal List<Item> Items = new List<Item>();
 
+        internal List<Item> WatchedItems
+        {
+            get
+            {
+                var entities = new ArbitraderEntities();
+                var watchedItemIDs = entities.WatchedItems.Select(i => i.APIID);
+                return this.Items.Where(i => watchedItemIDs.Contains(i.ID)).ToList();
+            }
+        }
+
         /// <summary>
         /// Initializes a new instance of <see cref="ItemContext"/>.
         /// </summary>
@@ -162,7 +172,11 @@ namespace Arbitrader.GW2API
         {
             this._httpClient = client;
             this.InitializeHttpClient(client);
+            this.Load(resource, replace);
+        }
 
+        public void Load(APIResource resource, bool replace)
+        {
             using (var entities = new ArbitraderEntities())
             {
                 this.LoadEntities(entities);
@@ -174,17 +188,18 @@ namespace Arbitrader.GW2API
                 {
                     case APIResource.Items:
                         this._isModelBuilt = false;
-                        this.UploadToDatabase<ItemResult, ItemEntity>(client, resource, entities.Items, entities);
+                        this.UploadToDatabase<ItemResult, ItemEntity>(this._httpClient, resource, entities.Items, entities);
                         break;
                     case APIResource.Recipes:
                         this._isModelBuilt = false;
-                        this.UploadToDatabase<RecipeResult, RecipeEntity>(client, resource, entities.Recipes, entities);
+                        this.UploadToDatabase<RecipeResult, RecipeEntity>(this._httpClient, resource, entities.Recipes, entities);
                         break;
                     case APIResource.CommerceListings:
                         this.BuildModel(entities);
                         this.Items = this.ExcludeNonSellableIds(this.Items);
                         var ids = this.Items.Select(i => i.ID);
-                        this.UploadToDatabase<ListingResult, ListingEntity>(client, resource, entities.Listings, entities, ids);
+                        this.UploadToDatabase<ListingResult, ListingEntity>(this._httpClient, resource, entities.Listings, entities, ids);
+                        this.AttachListingsToItems();
                         break;
                     default:
                         throw new ArgumentException($"Unable to load data for API resource \"{nameof(resource)}\".", nameof(resource));
@@ -227,6 +242,34 @@ namespace Arbitrader.GW2API
                     this._recipes.Add(new Recipe(entity, entities.Items, this));
 
             this._isModelBuilt = true;
+        }
+
+        public void AttachListingsToItems()
+        {
+            var entities = new ArbitraderEntities();
+
+            foreach (var item in this.Items)
+            {
+                var listing = entities.Listings.Where(l => l.APIID == item.ID).First();
+
+                foreach (var individualListing in listing.IndividualListings)
+                    item.Listings.Add(new Listing(individualListing));
+            }
+        }
+
+        internal void AddWatchedItem(Item item)
+        {
+            var entities = new ArbitraderEntities();
+
+            if (!entities.Items.Any())
+                throw new InvalidOperationException("Unable to add watched items before items have been loaded into the database.");
+
+            var existingWatchedIDs = entities.WatchedItems.Select(i => i.APIID);
+
+            if (!existingWatchedIDs.Contains(item.ID))
+                entities.WatchedItems.Add(new WatchedItem(item.ID));
+
+            entities.SaveChanges();
         }
 
         /// <summary>

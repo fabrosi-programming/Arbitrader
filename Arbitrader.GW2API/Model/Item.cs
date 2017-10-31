@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using Arbitrader.GW2API.Entities;
 using Arbitrader.GW2API.Results;
 
@@ -61,6 +63,8 @@ namespace Arbitrader.GW2API.Model
         /// </summary>
         internal List<Recipe> GeneratingRecipes { get; set; } = new List<Recipe>();
 
+        internal Listings Listings { get; set; } = new Listings();
+
         /// <summary>
         /// Initializes a new instance of <see cref="Item"/> from an existing entity.
         /// </summary>
@@ -78,6 +82,35 @@ namespace Arbitrader.GW2API.Model
 
             foreach (var flagEntity in itemEntity.Flags)
                 this.Flags.Add((Flag)Enum.Parse(typeof(Flag), flagEntity.Name));
+        }
+
+        internal int GetBestPrice(int count)
+        {
+            var marketPrice = this.GetMarketPrice(count);
+            var craftPrice = this.GeneratingRecipes.Min(r => r.GetPrice(count));
+            return Math.Min(marketPrice, craftPrice);
+        }
+
+        internal int GetMarketPrice(int count)
+        {
+            var buyListings = new Queue<Listing>(Listings.Where(l => l.Direction == Direction.Buy)
+                                                         .OrderBy(l => l.UnitPrice));
+
+            if (buyListings.Sum(l => l.Quantity) < count)
+                throw new InvalidOperationException($"Insufficient listings in the market to allow {count} of the item to be purchased.");
+
+            var price = 0;
+            var remaining = count;
+            var exhaustedListings = new List<Listing>();
+
+            while (remaining > 0)
+            {
+                var bestListing = buyListings.Dequeue();
+                price += bestListing.UnitPrice * Math.Min(bestListing.Quantity, remaining);
+                remaining -= bestListing.Quantity;
+            }
+
+            return price;
         }
 
         /// <summary>
