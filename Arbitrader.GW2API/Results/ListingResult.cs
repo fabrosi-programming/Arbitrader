@@ -27,16 +27,16 @@ namespace Arbitrader.GW2API.Results
                 LoadDate = this.LoadDate
             };
 
-            foreach (var individualthis in this.buys)
+            foreach (var individualListing in this.buys)
             {
-                var individualEntity = individualthis.ToEntity();
+                var individualEntity = individualListing.ToEntity();
                 individualEntity.Direction = "Buy";
                 entity.IndividualListings.Add(individualEntity);
             }
 
-            foreach (var individualthis in this.sells)
+            foreach (var individualListing in this.sells)
             {
-                var individualEntity = individualthis.ToEntity();
+                var individualEntity = individualListing.ToEntity();
                 individualEntity.Direction = "Sell";
                 entity.IndividualListings.Add(individualEntity);
             }

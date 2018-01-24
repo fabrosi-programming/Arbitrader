@@ -21,21 +21,28 @@ namespace Arbitrader.Sandbox
         /// <param name="args">Command line arguments passed in the invocation of the application.</param>
         public static void Main(string[] args)
         {
+            var context = new ItemContext();
+
             var menu = new ConsoleMenu("Select an option:", true);
             menu.AddOption('r', new ConsoleMenu.MenuOption()
             {
                 Description = "Get missing data from API",
-                Action = () => RefreshDataFromAPI(false)
+                Action = () => RefreshDataFromAPI(context, false)
             });
             menu.AddOption('n', new ConsoleMenu.MenuOption()
             {
                 Description = "Replace existing data",
-                Action = () => RefreshDataFromAPI(true)
+                Action = () => RefreshDataFromAPI(context, true)
             });
             menu.AddOption('w', new ConsoleMenu.MenuOption()
             {
                 Description = "Modify watched items",
-                Action = () => ModifyWatchedItems()
+                Action = () => ModifyWatchedItems(context)
+            });
+            menu.AddOption('p', new ConsoleMenu.MenuOption()
+            {
+                Description = "Find the cheapest price to acquire an item",
+                Action = () => FindCheapestPrice(context)
             });
 
             menu.Display();
@@ -45,9 +52,8 @@ namespace Arbitrader.Sandbox
         /// Displays a menu that allows the refreshing or replacement of recipe and item data from the GW2 API.
         /// </summary>
         /// <param name="replace">Indicates whether the user selection will append to or replace existing data.</param>
-        private static void RefreshDataFromAPI(bool replace)
+        private static void RefreshDataFromAPI(ItemContext context, bool replace)
         {
-            var context = new ItemContext();
             var client = new HttpClient();
 
             context.DataLoadStarted += (sender, e) => Console.WriteLine($"Started loading data for {e.Count} ids from resource \"{e.Resource}\"");
@@ -119,10 +125,8 @@ namespace Arbitrader.Sandbox
             menu.Display();
         }
 
-        private static void ModifyWatchedItems()
+        private static void ModifyWatchedItems(ItemContext context)
         {
-            var context = new ItemContext();
-
             var menu = new ConsoleMenu("Select an option:");
             menu.AddOption('a', new ConsoleMenu.MenuOption()
             {
@@ -185,6 +189,30 @@ namespace Arbitrader.Sandbox
             });
 
             menu.Display();
+        }
+
+        private static void FindCheapestPrice(ItemContext context)
+        {
+            Console.WriteLine("Item name:");
+            var itemName = Console.ReadLine();
+
+            var parsed = false;
+            int count = 0;
+            while (!parsed)
+            {
+                Console.WriteLine("Number required:");
+                parsed = Int32.TryParse(Console.ReadLine(), out count);
+            }
+
+            try
+            {
+                var price = context.GetCheapestPrice(itemName, count);
+                Console.WriteLine($"Best price: {price}"); //TODO: indicate market; indicate price path
+            }
+            catch (InvalidOperationException e) //TODO: use bespoke exception type
+            {
+                Console.WriteLine(e.Message);
+            }
         }
     }
 }

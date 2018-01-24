@@ -8,7 +8,7 @@ namespace Arbitrader.GW2API.Model
 {
     internal class Listings : List<Listing>
     {
-        public new void Add(Listing listing)
+        public void Merge(Listing listing)
         {
             var match = this.Where(l => l.Direction == listing.Direction)
                             .Where(l => l.UnitPrice == listing.UnitPrice)
@@ -16,6 +16,8 @@ namespace Arbitrader.GW2API.Model
 
             if (match != null)
                 match.Quantity += listing.Quantity;
+            else
+                this.Add(listing);
         }
     }
 }

@@ -199,7 +199,7 @@ namespace Arbitrader.GW2API
                         this.Items = this.ExcludeNonSellableIds(this.Items);
                         var ids = this.Items.Select(i => i.ID);
                         this.UploadToDatabase<ListingResult, ListingEntity>(this._httpClient, resource, entities.Listings, entities, ids);
-                        this.AttachListingsToItems();
+                        this.AttachListingsToItems(entities);
                         break;
                     default:
                         throw new ArgumentException($"Unable to load data for API resource \"{nameof(resource)}\".", nameof(resource));
@@ -244,16 +244,17 @@ namespace Arbitrader.GW2API
             this._isModelBuilt = true;
         }
 
-        public void AttachListingsToItems()
+        public void AttachListingsToItems(ArbitraderEntities entities)
         {
-            var entities = new ArbitraderEntities();
-
             foreach (var item in this.Items)
             {
-                var listing = entities.Listings.Where(l => l.APIID == item.ID).First();
+                var listing = entities.Listings.Where(l => l.APIID == item.ID).FirstOrDefault();
+
+                if (listing == null)
+                    continue;
 
                 foreach (var individualListing in listing.IndividualListings)
-                    item.Listings.Add(new Listing(individualListing));
+                    item.Listings.Merge(new Listing(individualListing));
             }
         }
 
@@ -348,6 +349,22 @@ namespace Arbitrader.GW2API
             entities.WatchedItems.Load();
             entities.Listings.Load();
             entities.IndividualListings.Load();
+        }
+
+        public int GetCheapestPrice(string itemName, int count)
+        {
+            if (!this._isModelBuilt) //TODO: get this to work even when listings haven't yet been refreshed from the API
+            {
+                var entities = new ArbitraderEntities();
+                this.BuildModel(entities);
+            }
+
+            var item = this.Items.Where(i => i.Name.Equals(itemName, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+
+            if (item == null)
+                throw new InvalidOperationException($"Could not find an item with name \"{itemName}\""); //TODO: use bespoke exception type
+
+            return item.GetBestPrice(count);
         }
 
         /// <summary>

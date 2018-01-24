@@ -87,7 +87,7 @@ namespace Arbitrader.GW2API.Model
         internal int GetBestPrice(int count)
         {
             var marketPrice = this.GetMarketPrice(count);
-            var craftPrice = this.GeneratingRecipes.Min(r => r.GetPrice(count));
+            var craftPrice = this.GeneratingRecipes.Count > 0 ? this.GeneratingRecipes.Min(r => r.GetPrice(count)) : Int32.MaxValue; //TODO: use null or a null object instead of Int32.MaxValue
             return Math.Min(marketPrice, craftPrice);
         }
 
