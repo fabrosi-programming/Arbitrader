@@ -138,7 +138,7 @@ namespace Arbitrader.GW2API
         /// <summary>
         /// The set of items contained by the context.
         /// </summary>
-        internal List<Item> Items = new List<Item>();
+        internal Items Items = new Items();
 
         internal List<Item> WatchedItems
         {
@@ -196,10 +196,10 @@ namespace Arbitrader.GW2API
                         break;
                     case APIResource.CommerceListings:
                         this.BuildModel(entities);
-                        this.Items = this.ExcludeNonSellableIds(this.Items);
+                        this.Items = this.Items.ExcludeNonSellable();
                         var ids = this.Items.Select(i => i.ID);
                         this.UploadToDatabase<ListingResult, ListingEntity>(this._httpClient, resource, entities.Listings, entities, ids);
-                        this.AttachListingsToItems(entities);
+                        this.Items.AttachListings(entities.Listings);
                         break;
                     default:
                         throw new ArgumentException($"Unable to load data for API resource \"{nameof(resource)}\".", nameof(resource));
@@ -211,16 +211,22 @@ namespace Arbitrader.GW2API
         /// Takes the data that has been loaded to the SQL database for items and recipes and constructs
         /// model objects to represent that data and its relationships.
         /// </summary>
-        public void BuildModel(ArbitraderEntities entities)
+        public void BuildModel(ArbitraderEntities entities, bool force = false)
         {
+            if (this._isModelBuilt && !force)
+                return;
+
             this._isModelBuilt = false;
 
+            var watchedItemIDs = entities.WatchedItems.Select(i => i.APIID);
+
+            //BUG: doesn't build the model for objects more than 1 level down the crafting tree from watched items
             IEnumerable<ItemEntity> watchedItems;
             IEnumerable<RecipeEntity> watchedRecipes;
 
             if (entities.WatchedItems.Any())
             {
-                var watchedItemIDs = entities.WatchedItems.Select(i => i.APIID);
+                
                 watchedItems = entities.Items.Where(i => watchedItemIDs.Contains(i.APIID));
                 watchedRecipes = entities.Recipes.Where(r => r.OutputItemID.HasValue && watchedItemIDs.Contains(r.OutputItemID.Value));
             }
@@ -230,7 +236,7 @@ namespace Arbitrader.GW2API
                 watchedRecipes = entities.Recipes;
             }
 
-            this.Items = new List<Item>();
+            
             this._recipes = new List<Recipe>();
 
             foreach (var entity in watchedItems)
@@ -242,20 +248,6 @@ namespace Arbitrader.GW2API
                     this._recipes.Add(new Recipe(entity, entities.Items, this));
 
             this._isModelBuilt = true;
-        }
-
-        public void AttachListingsToItems(ArbitraderEntities entities)
-        {
-            foreach (var item in this.Items)
-            {
-                var listing = entities.Listings.Where(l => l.APIID == item.ID).FirstOrDefault();
-
-                if (listing == null)
-                    continue;
-
-                foreach (var individualListing in listing.IndividualListings)
-                    item.Listings.Merge(new Listing(individualListing));
-            }
         }
 
         internal void AddWatchedItem(Item item)
@@ -353,11 +345,7 @@ namespace Arbitrader.GW2API
 
         public int GetCheapestPrice(string itemName, int count)
         {
-            if (!this._isModelBuilt) //TODO: get this to work even when listings haven't yet been refreshed from the API
-            {
-                var entities = new ArbitraderEntities();
-                this.BuildModel(entities);
-            }
+            this.BuildModel(new ArbitraderEntities());
 
             var item = this.Items.Where(i => i.Name.Equals(itemName, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
 
@@ -458,21 +446,6 @@ namespace Arbitrader.GW2API
 
             this.SaveChanges(resource, targetDataSet, entities, result);
             this.OnDataLoadFinished(new DataLoadEventArgs(resource, null));
-        }
-
-        /// <summary>
-        /// Given a set of item IDs, excludes those IDs that are for items that cannot be traded on the trading post.
-        /// </summary>
-        /// <param name="items">The unique identifiers in the GW2 API of the items to be filtered.</param>
-        /// <returns>The original list of unique identifiers except those that are for items that cannot be traded on
-        /// the trading post.</returns>
-        private List<Item> ExcludeNonSellableIds(IEnumerable<Item> items)
-        {
-            return items.Where(i => !i.Flags.Contains(Flag.NoSell))
-                        .Where(i => !i.Flags.Contains(Flag.AccountBound))
-                        .Where(i => !i.Flags.Contains(Flag.MonsterOnly))
-                        .Where(i => !i.Flags.Contains(Flag.SoulbindOnAcquire))
-                        .ToList();
         }
 
         /// <summary>

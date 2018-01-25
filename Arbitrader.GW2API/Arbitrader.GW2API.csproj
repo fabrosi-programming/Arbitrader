@@ -72,6 +72,7 @@
     <Compile Include="Entities\IndividualListingEntity.cs" />
     <Compile Include="Entities\WatchedItem.cs" />
     <Compile Include="Model\Direction.cs" />
+    <Compile Include="Model\Items.cs" />
     <Compile Include="Model\Listing.cs" />
     <Compile Include="Model\Listings.cs" />
     <Compile Include="Model\Rarity.cs" />
