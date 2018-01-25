@@ -302,7 +302,7 @@ namespace Arbitrader.GW2API
                                               .Where(i => !existingWatchedIDs.Contains(i.ID));
 
             foreach (var item in newWatchItems)
-                entities.WatchedItems.Add(new WatchedItem(item.APIID));
+                this.AddWatchedItem(new Item(item));
 
             entities.SaveChanges();
         }
