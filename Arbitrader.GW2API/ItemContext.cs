@@ -245,9 +245,30 @@ namespace Arbitrader.GW2API
 
             foreach (var entity in watchedRecipes)
                 if (!this._recipes.Select(r => r.ID).Contains(entity.APIID))
-                    this._recipes.Add(new Recipe(entity, entities.Items, this));
+                    this._recipes.Add(new Recipe(entity, this.GetItem));
 
             this._isModelBuilt = true;
+        }
+
+        /// <summary>
+        /// Resolves a unique identifier in the GW2 API to an instance of <see cref="Item"/>.
+        /// </summary>
+        /// <param name="id">The unique identifier to be resolved.</param>
+        /// <returns>An instance of <see cref="Item"/> with the specified ID.</returns>
+
+        private Item GetItem(int id)
+        {
+            var existingItems = this.Items.Where(i => i.ID == id);
+
+            if (existingItems.Any())
+                return existingItems.First();
+
+            var entities = new ArbitraderEntities();
+
+            var entity = entities.Items.Where(i => i.APIID == id).First();
+            this.Items.Add(new Item(entity));
+
+            return existingItems.First();
         }
 
         internal void AddWatchedItem(Item item)

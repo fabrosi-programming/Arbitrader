@@ -78,11 +78,11 @@ namespace Arbitrader.GW2API.Model
         /// Initializes a new instance of <see cref="Recipe"/>. Uses the database context to resolve item IDs to instances of <see cref="Item"/>.
         /// </summary>
         /// <param name="recipeEntity">The entity containing the descriptors for the recipe.</param>
-        /// <param name="context">The database context used to resolve item IDs to instances of <see cref="Item"/>.</param>
-        internal Recipe(RecipeEntity recipeEntity, IEnumerable<ItemEntity> itemEntities, ItemContext context)
+        /// <param name="getItem">A function that resolves an <see cref="int"/> ID to an <see cref="Item"/>.</param>
+        internal Recipe(RecipeEntity recipeEntity, Func<int, Item> getItem)
         {
             this._type = Enum.TryParse(recipeEntity.Type, out RecipeType type) ? type : RecipeType.Unknown;
-            this._outputItem = this.GetItem(recipeEntity.OutputItemID.Value, context.Items, itemEntities);
+            this._outputItem = getItem(recipeEntity.OutputItemID.Value);
             this._outputItemCount = recipeEntity.OutputItemCount ?? 0;
 
             foreach (var disciplineResult in recipeEntity.Disciplines)
@@ -92,35 +92,16 @@ namespace Arbitrader.GW2API.Model
                 this._flags.Add((Flag)Enum.Parse(typeof(Flag), flagResult.Name));
 
             foreach (var ingredient in recipeEntity.Ingredients)
-                this.Ingredients.Add(this.GetItem(ingredient.ItemID, context.Items, itemEntities), ingredient.Count);
+                this.Ingredients.Add(getItem(ingredient.ItemID), ingredient.Count);
 
             foreach (var ingredient in recipeEntity.GuildIngredients)
-                this.Ingredients.Add(this.GetItem(ingredient.UpgradeID, context.Items, itemEntities), ingredient.Count);
+                this.Ingredients.Add(getItem(ingredient.UpgradeID), ingredient.Count);
 
             // update each ingredient's recipe list to allow travel up the crafting tree
             foreach (var ingredient in this.Ingredients.Keys)
                 ingredient.DependentRecipes.Add(this);
 
             this._outputItem.GeneratingRecipes.Add(this);
-        }
-
-        /// <summary>
-        /// Resolves a unique identifier in the GW2 API to an instance of <see cref="Item"/>.
-        /// </summary>
-        /// <param name="itemId">The unique identifier to be resolved.</param>
-        /// <param name="items">The collection of <see cref="Item"/> to search for the given unique identifier.</param>
-        /// <returns></returns>
-        internal Item GetItem(int itemId, List<Item> items, IEnumerable<ItemEntity> itemEntities)
-        {
-            var existingItems = items.Where(i => i.ID == itemId);
-
-            if (existingItems.Any())
-                return existingItems.First();
-
-            var entity = itemEntities.Where(i => i.APIID == itemId).First();
-            items.Add(new Item(entity));
-
-            return existingItems.First();
         }
 
         internal int GetPrice(int count)

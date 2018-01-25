@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,17 +8,22 @@ using Arbitrader.GW2API.Entities;
 
 namespace Arbitrader.GW2API.Model
 {
-    internal class Items : List<Item>
+    internal class Items : IEnumerable<Item>
     {
-        public Items() : base()
+        private Dictionary<int, Item> _items = new Dictionary<int, Item>();
+
+        public Items()
         { }
 
-        public Items(IEnumerable<Item> items) : base(items)
-        { }
+        public Items(IEnumerable<Item> items)
+        {
+            foreach (var item in items)
+                this._items.Add(item.ID, item);
+        }
 
         public void AttachListings(IEnumerable<ListingEntity> listings)
         {
-            foreach (var item in this)
+            foreach (var item in this._items.Values)
             {
                 var listing = listings.Where(l => l.APIID == item.ID).FirstOrDefault();
 
@@ -38,10 +44,28 @@ namespace Arbitrader.GW2API.Model
 
         public Items ExcludeNonSellable()
         {
-            return new Items(this.Where(i => !i.Flags.Contains(Flag.NoSell))
-                                 .Where(i => !i.Flags.Contains(Flag.AccountBound))
-                                 .Where(i => !i.Flags.Contains(Flag.MonsterOnly))
-                                 .Where(i => !i.Flags.Contains(Flag.SoulbindOnAcquire)));
+            return new Items(this._items.Values
+                                        .Where(i => !i.Flags.Contains(Flag.NoSell))
+                                        .Where(i => !i.Flags.Contains(Flag.AccountBound))
+                                        .Where(i => !i.Flags.Contains(Flag.MonsterOnly))
+                                        .Where(i => !i.Flags.Contains(Flag.SoulbindOnAcquire)));
         }
+
+        public void Add(Item item)
+        {
+            this._items[item.ID] = item;
+        }
+
+        #region IEnumerable<Item> Support
+        public IEnumerator<Item> GetEnumerator()
+        {
+            return this._items.Values.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+        #endregion
     }
 }
