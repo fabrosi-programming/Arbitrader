@@ -59,6 +59,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="API.cs" />
     <Compile Include="APIResource.cs" />
     <Compile Include="Entities\DisciplineEntity.cs" />
     <Compile Include="Entities\Entity.cs" />

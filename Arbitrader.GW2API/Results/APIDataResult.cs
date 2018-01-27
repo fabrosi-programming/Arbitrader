@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Arbitrader.GW2API.Entities;
+using Arbitrader.GW2API.Properties;
 
 namespace Arbitrader.GW2API.Results
 {

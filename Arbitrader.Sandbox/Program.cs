@@ -54,8 +54,6 @@ namespace Arbitrader.Sandbox
         /// <param name="replace">Indicates whether the user selection will append to or replace existing data.</param>
         private static void RefreshDataFromAPI(ItemContext context, bool replace)
         {
-            var client = new HttpClient();
-
             context.DataLoadStarted += (sender, e) => Console.WriteLine($"Started loading data for {e.Count} ids from resource \"{e.Resource}\"");
             context.DataLoadFinished += (sender, e) => Console.WriteLine($"Finished loading data from resource \"{e.Resource}\"");
             context.DataLoadStatusUpdate += (sender, e) => Console.WriteLine($"Resource: {e.Resource}\t\tCount: {e.Count}\t\tMessage: {e.Message}");
@@ -71,7 +69,7 @@ namespace Arbitrader.Sandbox
                     var startTime = DateTime.Now;
                     Console.WriteLine($"{action} item data...");
 
-                    context.Load(client, APIResource.Items, replace);
+                    context.Load(APIResource.Items, replace);
 
                     var elapsed = DateTime.Now - startTime;
                     Console.WriteLine($"Done. ({elapsed.TotalSeconds} s)");
@@ -85,7 +83,7 @@ namespace Arbitrader.Sandbox
                     var startTime = DateTime.Now;
                     Console.WriteLine($"{action} recipe data...");
 
-                    context.Load(client, APIResource.Recipes, replace);
+                    context.Load(APIResource.Recipes, replace);
 
                     var elapsed = DateTime.Now - startTime;
                     Console.WriteLine($"Done. ({elapsed.TotalSeconds} s)");
@@ -99,7 +97,7 @@ namespace Arbitrader.Sandbox
                     var startTime = DateTime.Now;
                     Console.WriteLine($"{action} market listings...");
 
-                    context.Load(client, APIResource.CommerceListings, replace);
+                    context.Load(APIResource.CommerceListings, replace);
 
                     var elapsed = DateTime.Now - startTime;
                     Console.WriteLine($"Done. ({elapsed.TotalSeconds} s)");
@@ -113,9 +111,9 @@ namespace Arbitrader.Sandbox
                     var startTime = DateTime.Now;
                     Console.WriteLine($"{action} all data...");
 
-                    context.Load(client, APIResource.Items, replace);
-                    context.Load(client, APIResource.Recipes, replace);
-                    context.Load(client, APIResource.CommerceListings, replace);
+                    context.Load(APIResource.Items, replace);
+                    context.Load(APIResource.Recipes, replace);
+                    context.Load(APIResource.CommerceListings, replace);
 
                     var elapsed = DateTime.Now - startTime;
                     Console.WriteLine($"Done. ({elapsed.TotalSeconds} s)");
@@ -161,7 +159,7 @@ namespace Arbitrader.Sandbox
 
                     try
                     {
-                        context.RemoveWatchedItem(pattern);
+                        context.RemoveWatchedItems(pattern);
                     }
                     catch (InvalidOperationException e)
                     {
@@ -179,7 +177,7 @@ namespace Arbitrader.Sandbox
 
                     try
                     {
-                        context.RemoveWatchedItem(name, false);
+                        context.RemoveWatchedItem(name);
                     }
                     catch (InvalidOperationException e)
                     {

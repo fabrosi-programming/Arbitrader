@@ -4,6 +4,7 @@ namespace Arbitrader.GW2API
 {
     public enum APIResource
     {
+        None = 0,
         Items,
         Recipes,
         CommerceListings
