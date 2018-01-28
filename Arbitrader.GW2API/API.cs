@@ -9,6 +9,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using Arbitrader.GW2API.Entities;
+using Arbitrader.GW2API.Model;
 using Arbitrader.GW2API.Properties;
 using Arbitrader.GW2API.Results;
 
@@ -38,15 +39,21 @@ namespace Arbitrader.GW2API
         /// </summary>
         private bool _continueOnError = true;
 
+        private ArbitraderEntities _entities;
+
         /// <summary>
         /// Initializes a new instance of <see cref="API"/>.
         /// </summary>
         /// <param name="updateInterval">The number of records processed between occurences of <see cref="DataLoadStatusUpdate"/>.</param>
         /// <param name="continueOnError">Determines whether errors saving records to the database will terminate further processing or
         /// if such errors will be overlooked to allow processing to continue.</param>
-
-        public API(int updateInterval = 100, bool continueOnError = true)
+        public API(ArbitraderEntities entities, int updateInterval = 100, bool continueOnError = true)
         {
+            this._entities = entities;
+
+            if (!this._entities.Loaded)
+                this._entities.Load();
+
             this.InitializeHttpClient();
 
             this._updateInterval = updateInterval;
@@ -109,9 +116,8 @@ namespace Arbitrader.GW2API
         /// <param name="client">The HTTP client used to interact with the GW2 API.</param>
         /// <param name="resource">The type of resource to get data for.</param>
         /// <param name="targetDataSet">The dataset containing entities to be populated from results from the GW2 API.</param>
-        /// <param name="entities">An interface for item, recipe, and market data stored in the Arbitrader SQL database.</param>
         /// <param name="ids">The unique identifiers in the GW2 API for the items for which data is to be retrieved.</param>
-        public void UploadToDatabase<R, E>(APIResource resource, DbSet<E> targetDataSet, IEnumerable<int> ids)
+        private void UploadToDatabase<R, E>(APIResource resource, DbSet<E> targetDataSet, IEnumerable<int> ids)
             where R : APIDataResult<E>
             where E : Entity
         {
@@ -123,8 +129,6 @@ namespace Arbitrader.GW2API
             var count = 0;
             E result = null;
 
-            var entities = new ArbitraderEntities();
-
             foreach (var id in ids)
             {
                 count += 1;
@@ -135,13 +139,20 @@ namespace Arbitrader.GW2API
 
                 if (count % _updateInterval == 0)
                 {
-                    this.SaveChanges(resource, entities, () => targetDataSet.Remove(result));
+                    this.SaveChanges(resource, () => targetDataSet.Remove(result));
                     //this.OnDataLoadStatusUpdate(new DataLoadEventArgs(resource, count));
                 }
             }
 
-            this.SaveChanges(resource, entities, () => targetDataSet.Remove(result));
+            this.SaveChanges(resource, () => targetDataSet.Remove(result));
             //this.OnDataLoadFinished(new DataLoadEventArgs(resource, null));
+        }
+
+        public void UploadToDatabase<R, E>(APIResource resource, DbSet<E> targetDataSet, IEnumerable<Item> items)
+            where R : APIDataResult<E>
+            where E : Entity
+        {
+            this.UploadToDatabase<R, E>(resource, targetDataSet, items.Select(i => i.ID));
         }
 
         /// <summary>
@@ -152,7 +163,6 @@ namespace Arbitrader.GW2API
         /// <param name="client">The HTTP client used to interact with the GW2 API.</param>
         /// <param name="resource">The type of resource to get data for.</param>
         /// <param name="targetDataSet">The dataset containing entities to be populated from results from the GW2 API.</param>
-        /// <param name="entities">An interface for item, recipe, and market data stored in the Arbitrader SQL database.</param>
         public void UploadToDatabase<R, E>(APIResource resource, DbSet<E> targetDataSet)
             where R : APIDataResult<E>
             where E : Entity
@@ -193,13 +203,12 @@ namespace Arbitrader.GW2API
         /// <typeparam name="E">The entity type that is to be used to save the result data to the SQL database.</typeparam>
         /// <param name="resource">The type of resource to get data for.</param>
         /// <param name="targetDataSet">The dataset containing entities to be populated from results from the GW2 API.</param>
-        /// <param name="entities">An interface for item, recipe, and market data stored in the Arbitrader SQL database.</param>
         /// <param name="result">The GW2 API query result containing data to be saved to the database.</param>
-        private void SaveChanges(APIResource resource, ArbitraderEntities entities, Action onFailure)
+        private void SaveChanges(APIResource resource, Action onFailure)
         {
             try
             {
-                entities.SaveChanges();
+                this._entities.SaveChanges();
             }
             catch (DbUpdateException e)
             {

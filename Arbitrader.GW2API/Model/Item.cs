@@ -11,7 +11,7 @@ namespace Arbitrader.GW2API.Model
     /// <summary>
     /// Represents a single item in GW2 and all of its upstream and downstream recipe dependencies.
     /// </summary>
-    internal class Item
+    public class Item
     {
         /// <summary>
         /// The address of the icon used to represent the item in the GW2 UI.
@@ -37,6 +37,25 @@ namespace Arbitrader.GW2API.Model
         /// The value of the item if it were to be sold to an NPC vendor.
         /// </summary>
         private int? _vendor_value;
+
+        public bool IsSellable
+        {
+            get
+            {
+                return !(this.Flags.Contains(Flag.NoSell)
+                         || this.Flags.Contains(Flag.AccountBound)
+                         || this.Flags.Contains(Flag.MonsterOnly)
+                         || this.Flags.Contains(Flag.SoulbindOnAcquire));
+            }
+        }
+
+        public bool IsCraftable
+        {
+            get
+            {
+                return this.GeneratingRecipes.Count > 0;
+            }
+        }
 
         /// <summary>
         /// The list of flags assigned to the item.
@@ -86,8 +105,16 @@ namespace Arbitrader.GW2API.Model
 
         internal int GetBestPrice(int count)
         {
-            var marketPrice = this.GetMarketPrice(count);
-            var craftPrice = this.GeneratingRecipes.Count > 0 ? this.GeneratingRecipes.Min(r => r.GetPrice(count)) : Int32.MaxValue; //TODO: use null or a null object instead of Int32.MaxValue
+            int marketPrice;
+            int craftPrice;
+
+            if (!this.IsSellable && !this.IsCraftable)
+                return 0;
+
+            // at least one of marketPrice and craftPrice will be something other than Int32.MaxValue
+            marketPrice = this.IsSellable ? this.GetMarketPrice(count) : Int32.MaxValue;
+            craftPrice = this.IsCraftable ? this.GeneratingRecipes.Min(r => r.GetPrice(count)) : Int32.MaxValue;
+
             return Math.Min(marketPrice, craftPrice);
         }
 

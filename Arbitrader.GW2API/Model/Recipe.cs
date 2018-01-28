@@ -10,7 +10,7 @@ namespace Arbitrader.GW2API.Model
     /// <summary>
     /// Represents a single recipe and its relationships to the items used to craft it.
     /// </summary>
-    internal class Recipe
+    public class Recipe
     {
         /// <summary>
         /// The unique identifier in the GW2 API for the recipe.

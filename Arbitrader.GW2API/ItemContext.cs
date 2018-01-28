@@ -23,137 +23,51 @@ namespace Arbitrader.GW2API
     /// interactions with the SQL database adn allows replacement of or appending to existing
     /// data.
     /// </summary>
-    public class ItemContext
+    public class ItemContext : IDisposable
     {
-        #region Events
-        /// <summary>
-        /// Contains data for events raised at points throughout the data load process.
-        /// </summary>
-        public class DataLoadEventArgs : EventArgs
-        {
-            /// <summary>
-            /// The GW2 API resource for which data is being loaded.
-            /// </summary>
-            public APIResource Resource { get; set; }
-
-            /// <summary>
-            /// The number of records affected since the last data load status update.
-            /// </summary>
-            public int? Count { get; set; }
-
-            /// <summary>
-            /// A message raised during the data load.
-            /// </summary>
-            public string Message { get; set; }
-
-            /// <summary>
-            /// Initializes a new instance of <see cref="DataLoadEventArgs"/>.
-            /// </summary>
-            /// <param name="resource">The GW2 API resource for which data is being loaded.</param>
-            /// <param name="count">The number of records affected since the last data load status update.</param>
-            /// <param name="message">A message raised during the data load.</param>
-            public DataLoadEventArgs(APIResource resource, int? count = null, string message = null)
-            {
-                this.Resource = resource;
-                this.Count = count;
-                this.Message = message;
-            }
-        }
-
-        /// <summary>
-        /// Occurs when a data load has started.
-        /// </summary>
-        public event EventHandler<DataLoadEventArgs> DataLoadStarted;
-
-        /// <summary>
-        /// Occurs when a data load has finished.
-        /// </summary>
-        public event EventHandler<DataLoadEventArgs> DataLoadFinished;
-
-        /// <summary>
-        /// Occurs when a data load has a status update to report.
-        /// </summary>
-        public event EventHandler<DataLoadEventArgs> DataLoadStatusUpdate;
-
-        /// <summary>
-        /// Invokes any event handlers registered for <see cref="DataLoadStarted"/>.
-        /// </summary>
-        /// <param name="e">The arguments passed to the event handlers</param>
-        protected virtual void OnDataLoadStarted(DataLoadEventArgs e)
-        {
-            DataLoadStarted?.Invoke(this, e);
-        }
-
-        /// <summary>
-        /// Invokes any event handlers registered for <see cref="DataLoadFinished"/>.
-        /// </summary>
-        /// <param name="e">The arguments passed to the event handlers.</param>
-        protected virtual void OnDataLoadFinished(DataLoadEventArgs e)
-        {
-            DataLoadFinished?.Invoke(this, e);
-        }
-
-        /// <summary>
-        /// Invokes any event handlers registered for <see cref="DataLoadStatusUpdate"/>.
-        /// </summary>
-        /// <param name="e">The argumnets passed to the event handlers.</param>
-        protected virtual void OnDataLoadStatusUpdate(DataLoadEventArgs e)
-        {
-            DataLoadStatusUpdate?.Invoke(this, e);
-        }
-        #endregion
-
         /// <summary>
         /// True if the item/recipe mode has been built; false if not.
         /// </summary>
         private bool _isModelBuilt = false;
 
-        /// <summary>
-        /// The set of recipes contained by the context.
-        /// </summary>
-        private List<Recipe> _recipes = new List<Recipe>();
+        private API _api;
 
         /// <summary>
         /// The set of items contained by the context.
         /// </summary>
         internal Items Items = new Items();
 
-        private API _api = new API();
+        private ArbitraderEntities _entities = new ArbitraderEntities();
 
-        internal List<Item> WatchedItems
+        public ItemContext()
         {
-            get
-            {
-                var entities = new ArbitraderEntities();
-                var watchedItemIDs = entities.WatchedItems.Select(i => i.APIID);
-                return this.Items.Where(i => watchedItemIDs.Contains(i.ID)).ToList();
-            }
+            if (!this._entities.Loaded)
+                this._entities.Load();
+
+            this._api = new API(this._entities);
         }
 
         public void Load(APIResource resource, bool replace)
         {
-            var entities = new ArbitraderEntities();
-            entities.Load();
-
             if (replace)
-                entities.Delete(resource);
+                this._entities.Delete(resource);
 
             switch (resource)
             {
                 case APIResource.Items:
                     this._isModelBuilt = false;
-                    this._api.UploadToDatabase<ItemResult, ItemEntity>(resource, entities.Items);
+                    this._api.UploadToDatabase<ItemResult, ItemEntity>(resource, this._entities.Items);
                     break;
                 case APIResource.Recipes:
                     this._isModelBuilt = false;
-                    this._api.UploadToDatabase<RecipeResult, RecipeEntity>(resource, entities.Recipes);
+                    this._api.UploadToDatabase<RecipeResult, RecipeEntity>(resource, this._entities.Recipes);
                     break;
                 case APIResource.CommerceListings:
-                    this.BuildModel(entities);
-                    this.Items = this.Items.ExcludeNonSellable();
+                    this.BuildModel();
+                    var sellableItems = this.Items.ExcludeNonSellable();
                     var ids = this.Items.Select(i => i.ID);
-                    this._api.UploadToDatabase<ListingResult, ListingEntity>(resource, entities.Listings, ids);
-                    this.Items.AttachListings(entities.Listings);
+                    this._api.UploadToDatabase<ListingResult, ListingEntity>(resource, this._entities.Listings, sellableItems);
+                    sellableItems.AttachListings(this._entities.Listings);
                     break;
                 default:
                     throw new ArgumentException($"Unable to load data for API resource \"{nameof(resource)}\".", nameof(resource));
@@ -164,41 +78,31 @@ namespace Arbitrader.GW2API
         /// Takes the data that has been loaded to the SQL database for items and recipes and constructs
         /// model objects to represent that data and its relationships.
         /// </summary>
-        public void BuildModel(ArbitraderEntities entities, bool force = false)
+        public void BuildModel(bool force = false)
         {
             if (this._isModelBuilt && !force)
                 return;
 
             this._isModelBuilt = false;
 
-            var watchedItemIDs = entities.WatchedItems.Select(i => i.APIID);
+            var watchedItemIDs = this._entities.WatchedItems.Select(i => i.APIID);
 
             //BUG: doesn't build the model for objects more than 1 level down the crafting tree from watched items
-            IEnumerable<ItemEntity> watchedItems;
-            IEnumerable<RecipeEntity> watchedRecipes;
+            var watchedItems = this._entities.WatchedItems.Any()
+                ? this._entities.Items.Where(i => watchedItemIDs.Contains(i.APIID))
+                : this._entities.Items;
 
-            if (entities.WatchedItems.Any())
+            this.Items = new Items(watchedItems);
+
+            var before = 0;
+            var after = 0;
+
+            do
             {
-                
-                watchedItems = entities.Items.Where(i => watchedItemIDs.Contains(i.APIID));
-                watchedRecipes = entities.Recipes.Where(r => r.OutputItemID.HasValue && watchedItemIDs.Contains(r.OutputItemID.Value));
-            }
-            else
-            {
-                watchedItems = entities.Items;
-                watchedRecipes = entities.Recipes;
-            }
-
-            
-            this._recipes = new List<Recipe>();
-
-            foreach (var entity in watchedItems)
-                if (!this.Items.Select(i => i.ID).Contains(entity.APIID))
-                    this.Items.Add(new Item(entity));
-
-            foreach (var entity in watchedRecipes)
-                if (!this._recipes.Select(r => r.ID).Contains(entity.APIID))
-                    this._recipes.Add(new Recipe(entity, this.GetItem));
+                before = after;
+                this.Items.FillGeneratingRecipes(this.GetGeneratingRecipes);
+                after = this.Items.Count;
+            } while (before != after);
 
             this._isModelBuilt = true;
         }
@@ -208,7 +112,6 @@ namespace Arbitrader.GW2API
         /// </summary>
         /// <param name="id">The unique identifier to be resolved.</param>
         /// <returns>An instance of <see cref="Item"/> with the specified ID.</returns>
-
         private Item GetItem(int id)
         {
             var existingItems = this.Items.Where(i => i.ID == id);
@@ -216,17 +119,22 @@ namespace Arbitrader.GW2API
             if (existingItems.Any())
                 return existingItems.First();
 
-            var entities = new ArbitraderEntities();
+            var entity = this._entities.Items.Where(i => i.APIID == id).First();
+            var item = new Item(entity);
+            this.Items.Add(item);
 
-            var entity = entities.Items.Where(i => i.APIID == id).First();
-            this.Items.Add(new Item(entity));
-
-            return existingItems.First();
+            return item;
         }
 
+        private IEnumerable<Recipe> GetGeneratingRecipes(Item item)
+        {
+            var recipeEntities = this._entities.Recipes.Where(r => r.OutputItemID == item.ID);
+            return recipeEntities.ToList().Select(r => new Recipe(r, this.GetItem));
+        }
+        
         public int GetCheapestPrice(string itemName, int count)
         {
-            this.BuildModel(new ArbitraderEntities());
+            this.BuildModel();
 
             var item = this.Items.Where(i => i.Name.Equals(itemName, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
 
@@ -239,26 +147,46 @@ namespace Arbitrader.GW2API
         #region ArbitraderEntities Pass-Through
         public void AddWatchedItems(string pattern)
         {
-            var entities = new ArbitraderEntities();
-            entities.AddWatchedItems(pattern);
+            this._entities.AddWatchedItems(pattern);
         }
 
         public void RemoveWatchedItem(string name)
         {
-            var entities = new ArbitraderEntities();
-            entities.RemoveWatchedItems(name, false);
+            this._entities.RemoveWatchedItems(name, false);
         }
 
         public void RemoveWatchedItems(string pattern)
         {
-            var entities = new ArbitraderEntities();
-            entities.RemoveWatchedItems(pattern);
+            this._entities.RemoveWatchedItems(pattern);
         }
 
         public void ClearWatchedItems()
         {
-            var entities = new ArbitraderEntities();
-            entities.ClearWatchedItems();
+            this._entities.ClearWatchedItems();
+        }
+        #endregion
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    this._entities.Dispose();
+                }
+
+                disposedValue = true;
+            }
+        }
+        
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
         }
         #endregion
     }

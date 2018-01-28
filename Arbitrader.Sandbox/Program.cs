@@ -54,10 +54,6 @@ namespace Arbitrader.Sandbox
         /// <param name="replace">Indicates whether the user selection will append to or replace existing data.</param>
         private static void RefreshDataFromAPI(ItemContext context, bool replace)
         {
-            context.DataLoadStarted += (sender, e) => Console.WriteLine($"Started loading data for {e.Count} ids from resource \"{e.Resource}\"");
-            context.DataLoadFinished += (sender, e) => Console.WriteLine($"Finished loading data from resource \"{e.Resource}\"");
-            context.DataLoadStatusUpdate += (sender, e) => Console.WriteLine($"Resource: {e.Resource}\t\tCount: {e.Count}\t\tMessage: {e.Message}");
-
             var menu = new ConsoleMenu($"Select data resource to {(replace ? "replace" : "refresh")}:");
             var action = replace ? "Replacing" : "Refreshing";
 

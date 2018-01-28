@@ -78,6 +78,7 @@
     <Compile Include="Model\Listings.cs" />
     <Compile Include="Model\Rarity.cs" />
     <Compile Include="Model\ItemType.cs" />
+    <Compile Include="Model\Recipes.cs" />
     <Compile Include="Model\RecipeType.cs" />
     <Compile Include="Results\APIDataResult.cs" />
     <Compile Include="Entities\ArbitraderEntities.cs" />
