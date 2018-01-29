@@ -104,24 +104,39 @@ namespace Arbitrader.GW2API.Model
             this._outputItem.GeneratingRecipes.Add(this);
         }
 
+        /// <summary>
+        /// Returns the price of crafting the recipe the specified number of times.
+        /// </summary>
+        /// <param name="count">The number of times that the recipe is to be crafted.</param>
+        /// <returns>The price of crafting the recipe the specified number of times.</returns>
         internal int GetCraftingPrice(int count)
         {
-            if (!this.MaterialsAreCraftableFromSellableItems())
+            if (!this.SubIngredientsAreBuyable())
                 return this._outputItem.GetMarketPrice(count);
 
-            return Ingredients.Select(i => i.Key.GetBestPrice(i.Value * count))
+            return Ingredients.Select(i => i.Key.GetLowestPrice(i.Value * count))
                               .Sum();
         }
 
-        private bool MaterialsAreCraftableFromSellableItems()
+        /// <summary>
+        /// Returns <see cref="true"/> if all of the recipe's ingredients are either buyable or can be crafted
+        /// from items that are buyable and <see cref="false"/> otherwise.
+        /// </summary>
+        /// <returns>True if all of the recipe's ingredients are either buyable or can be crafted
+        /// from items that are buyable and false otherwise.</returns>
+        private bool SubIngredientsAreBuyable()
         {
-            return this.Ingredients.Keys.All(i => i.IsSellable
-                                             || i.GeneratingRecipes.Any(r => r.MaterialsAreSellable()));
+            return this.Ingredients.Keys.All(i => i.IsBuyable
+                                             || i.GeneratingRecipes.Any(r => r.IngredientsAreBuyable()));
         }
 
-        public bool MaterialsAreSellable()
+        /// <summary>
+        /// Returns <see cref="true"/> if all of the recipe's ingredients are buyable and <see cref="false"/> otherwise.
+        /// </summary>
+        /// <returns></returns>
+        public bool IngredientsAreBuyable()
         {
-            return this.Ingredients.Keys.All(i => i.IsSellable);
+            return this.Ingredients.Keys.All(i => i.IsBuyable);
         }
 
         /// <summary>

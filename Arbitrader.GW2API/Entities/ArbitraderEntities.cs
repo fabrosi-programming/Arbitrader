@@ -92,7 +92,6 @@ namespace Arbitrader.GW2API.Entities
         /// Deletes existing data from the SQL database. Respects foreign key relationships in that data.
         /// </summary>
         /// <param name="resource">The resource for which data is to be deleted.</param>
-        /// <param name="entities">An interface for item, recipe, and market data stored in the Arbitrader SQL database.</param>
         public void Delete(APIResource resource)
         {
             if (resource == APIResource.Recipes || resource == APIResource.Items)

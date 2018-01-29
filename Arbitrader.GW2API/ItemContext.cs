@@ -30,23 +30,38 @@ namespace Arbitrader.GW2API
         /// </summary>
         private bool _isModelBuilt = false;
 
-        private API _api;
+        /// <summary>
+        /// The interface to the GW2 API.
+        /// </summary>
+        private IAPI _api;
 
         /// <summary>
         /// The set of items contained by the context.
         /// </summary>
         internal Items Items = new Items();
 
+        /// <summary>
+        /// The entities used for maintaining persistent data in the SQL database.
+        /// </summary>
         private ArbitraderEntities _entities = new ArbitraderEntities();
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="ItemContext"/>.
+        /// </summary>
         public ItemContext()
         {
             if (!this._entities.Loaded)
                 this._entities.Load();
 
-            this._api = new API(this._entities);
+            this._api = new API(this._entities); //TODO: extract dependency
         }
 
+        /// <summary>
+        /// Downloads data from the GW2 API for the specified resource with the option
+        /// to append to or replace existing data for that resource.
+        /// </summary>
+        /// <param name="resource">The API resource for which to download data.</param>
+        /// <param name="replace">True if existing data is to be replace; false otherwise.</param>
         public void Load(APIResource resource, bool replace)
         {
             if (replace)
@@ -100,7 +115,7 @@ namespace Arbitrader.GW2API
             do
             {
                 before = after;
-                this.Items.FillGeneratingRecipes(this.GetGeneratingRecipes);
+                this.Items.AttachGeneratingRecipes(this.GetGeneratingRecipes);
                 after = this.Items.Count;
             } while (before != after);
 
@@ -126,13 +141,25 @@ namespace Arbitrader.GW2API
             return item;
         }
 
+        /// <summary>
+        /// Returns a collection of all <see cref="Recipe"/>s that result in the specified <see cref="Item"/> as their output.
+        /// </summary>
+        /// <param name="item">The item for which to get generating recipes.</param>
+        /// <returns>A collection of all <see cref="Recipe"/>s that result in the specified <see cref="Item"/> as their output.</returns>
         private IEnumerable<Recipe> GetGeneratingRecipes(Item item)
         {
             var recipeEntities = this._entities.Recipes.Where(r => r.OutputItemID == item.ID);
             return recipeEntities.ToList().Select(r => new Recipe(r, this.GetItem));
         }
-        
-        public int GetCheapestPrice(string itemName, int count)
+
+        /// <summary>
+        /// Returns the lowest price for which a number of an item can be obtained, whether by
+        /// crafting in whole or in part or by purchasing from the trading post.
+        /// </summary>
+        /// <param name="itemName">The name of the item to be priced.</param>
+        /// <param name="count">The number of the item required.</param>
+        /// <returns>The lowest price for which a number of an item can be obtained</returns>
+        public int GetLowestPrice(string itemName, int count)
         {
             this.BuildModel();
 
@@ -141,25 +168,40 @@ namespace Arbitrader.GW2API
             if (item == null)
                 throw new InvalidOperationException($"Could not find an item with name \"{itemName}\""); //TODO: use bespoke exception type
 
-            return item.GetBestPrice(count);
+            return item.GetLowestPrice(count);
         }
 
         #region ArbitraderEntities Pass-Through
+        /// <summary>
+        /// Adds items to the list of watched items when their names contain the specified text.
+        /// </summary>
+        /// <param name="pattern">The string pattern to compare item names against.</param>
         public void AddWatchedItems(string pattern)
         {
             this._entities.AddWatchedItems(pattern);
         }
 
+        /// <summary>
+        /// Removes an item from the list of watched items when its name exactly matches the specified text.
+        /// </summary>
+        /// <param name="name">The exact case-insensitive name of the item to be removed.</param>
         public void RemoveWatchedItem(string name)
         {
             this._entities.RemoveWatchedItems(name, false);
         }
 
+        /// <summary>
+        /// Removes all items from the list of watched items when their names contain the specified text.
+        /// </summary>
+        /// <param name="pattern">The string pattern to compare item names against.</param>
         public void RemoveWatchedItems(string pattern)
         {
             this._entities.RemoveWatchedItems(pattern);
         }
 
+        /// <summary>
+        /// Removes all items from the list of watched items.
+        /// </summary>
         public void ClearWatchedItems()
         {
             this._entities.ClearWatchedItems();
@@ -167,6 +209,7 @@ namespace Arbitrader.GW2API
         #endregion
 
         #region IDisposable Support
+        // This code added to correctly implement the disposable pattern.
         private bool disposedValue = false; // To detect redundant calls
 
         protected virtual void Dispose(bool disposing)
@@ -182,7 +225,6 @@ namespace Arbitrader.GW2API
             }
         }
         
-        // This code added to correctly implement the disposable pattern.
         public void Dispose()
         {
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.

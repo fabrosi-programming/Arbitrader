@@ -200,7 +200,7 @@ namespace Arbitrader.Sandbox
 
             try
             {
-                var price = context.GetCheapestPrice(itemName, count);
+                var price = context.GetLowestPrice(itemName, count);
                 Console.WriteLine($"Best price: {price}"); //TODO: indicate market; indicate price path
             }
             catch (InvalidOperationException e) //TODO: use bespoke exception type

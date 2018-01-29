@@ -15,7 +15,7 @@ using Arbitrader.GW2API.Results;
 
 namespace Arbitrader.GW2API
 {
-    public class API
+    public class API : IAPI
     {
         /// <summary>
         /// The HTTP client used to get results from the GW2 API.
@@ -113,7 +113,6 @@ namespace Arbitrader.GW2API
         /// </summary>
         /// <typeparam name="R">The result type that query results from the GW2 API are to be filtered into.</typeparam>
         /// <typeparam name="E">The entity type that is to be used to save the result data to the SQL database.</typeparam>
-        /// <param name="client">The HTTP client used to interact with the GW2 API.</param>
         /// <param name="resource">The type of resource to get data for.</param>
         /// <param name="targetDataSet">The dataset containing entities to be populated from results from the GW2 API.</param>
         /// <param name="ids">The unique identifiers in the GW2 API for the items for which data is to be retrieved.</param>
@@ -148,6 +147,14 @@ namespace Arbitrader.GW2API
             //this.OnDataLoadFinished(new DataLoadEventArgs(resource, null));
         }
 
+        /// <summary>
+        /// Gets results from the GW2 API and saves those results to the SQL database.
+        /// </summary>
+        /// <typeparam name="R">The result type that query results from the GW2 API are to be filtered into.</typeparam>
+        /// <typeparam name="E">The entity type that is to be used to save the result data to the SQL database.</typeparam>
+        /// <param name="resource">The type of resource to get data for.</param>
+        /// <param name="targetDataSet">The dataset containing entities to be populated from results from the GW2 API.</param>
+        /// <param name="ids">The items in the GW2 API for which data is to be retrieved.</param>
         public void UploadToDatabase<R, E>(APIResource resource, DbSet<E> targetDataSet, IEnumerable<Item> items)
             where R : APIDataResult<E>
             where E : Entity

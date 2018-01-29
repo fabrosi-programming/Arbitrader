@@ -38,7 +38,11 @@ namespace Arbitrader.GW2API.Model
         /// </summary>
         private int? _vendor_value;
 
-        public bool IsSellable
+        /// <summary>
+        /// Gets <see cref="true"/> if the <see cref="Item"/> can be bought and sold either
+        /// on the market or to a vendor and <see cref="false"/> otherwise.
+        /// </summary>
+        public bool IsBuyable
         {
             get
             {
@@ -49,6 +53,10 @@ namespace Arbitrader.GW2API.Model
             }
         }
 
+        /// <summary>
+        /// Gets <see cref="true"/> if there are crafting recipes for which the <see cref="Item"/> is the output and
+        /// <see cref="false"/> otherwise.
+        /// </summary>
         public bool IsCraftable
         {
             get
@@ -103,21 +111,35 @@ namespace Arbitrader.GW2API.Model
                 this.Flags.Add((Flag)Enum.Parse(typeof(Flag), flagEntity.Name));
         }
 
-        internal int GetBestPrice(int count)
+        /// <summary>
+        /// Returns the lower either the price to buy the item on the market or the price to craft
+        /// the item.
+        /// </summary>
+        /// <param name="count">The number of the item to be priced.</param>
+        /// <returns>The lower either the price to buy the item on the market or the price to craft
+        /// the item.</returns>
+        internal int GetLowestPrice(int count)
         {
             int marketPrice;
             int craftPrice;
 
-            if (!this.IsSellable && !this.IsCraftable)
+            if (!this.IsBuyable && !this.IsCraftable)
                 return 0;
 
             // at least one of marketPrice and craftPrice will be something other than Int32.MaxValue
-            marketPrice = this.IsSellable ? this.GetMarketPrice(count) : Int32.MaxValue;
+            marketPrice = this.IsBuyable ? this.GetMarketPrice(count) : Int32.MaxValue;
             craftPrice = this.IsCraftable ? this.GeneratingRecipes.Min(r => r.GetCraftingPrice(count)) : Int32.MaxValue;
 
             return Math.Min(marketPrice, craftPrice);
         }
 
+        /// <summary>
+        /// Returns the lowest price that can be paid on the market to obtain the specified number
+        /// of the item.
+        /// </summary>
+        /// <param name="count">The number of the item to be priced.</param>
+        /// <returns>The lowest price that can be paid on the market to obtain the specified number
+        /// of the item.</returns>
         internal int GetMarketPrice(int count)
         {
             var buyListings = new Queue<Listing>(Listings.Where(l => l.Direction == Direction.Buy)
