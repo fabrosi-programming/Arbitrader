@@ -113,7 +113,7 @@ namespace Arbitrader.GW2API.Model
 
             // at least one of marketPrice and craftPrice will be something other than Int32.MaxValue
             marketPrice = this.IsSellable ? this.GetMarketPrice(count) : Int32.MaxValue;
-            craftPrice = this.IsCraftable ? this.GeneratingRecipes.Min(r => r.GetPrice(count)) : Int32.MaxValue;
+            craftPrice = this.IsCraftable ? this.GeneratingRecipes.Min(r => r.GetCraftingPrice(count)) : Int32.MaxValue;
 
             return Math.Min(marketPrice, craftPrice);
         }
@@ -128,7 +128,6 @@ namespace Arbitrader.GW2API.Model
 
             var price = 0;
             var remaining = count;
-            var exhaustedListings = new List<Listing>();
 
             while (remaining > 0)
             {

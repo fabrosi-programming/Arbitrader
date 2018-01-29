@@ -104,14 +104,24 @@ namespace Arbitrader.GW2API.Model
             this._outputItem.GeneratingRecipes.Add(this);
         }
 
-        internal int GetPrice(int count)
+        internal int GetCraftingPrice(int count)
         {
-            var price = 0;
+            if (!this.MaterialsAreCraftableFromSellableItems())
+                return this._outputItem.GetMarketPrice(count);
 
-            foreach (var ingredient in this.Ingredients)
-                price += ingredient.Key.GetBestPrice(ingredient.Value * count);
+            return Ingredients.Select(i => i.Key.GetBestPrice(i.Value * count))
+                              .Sum();
+        }
 
-            return price;
+        private bool MaterialsAreCraftableFromSellableItems()
+        {
+            return this.Ingredients.Keys.All(i => i.IsSellable
+                                             || i.GeneratingRecipes.Any(r => r.MaterialsAreSellable()));
+        }
+
+        public bool MaterialsAreSellable()
+        {
+            return this.Ingredients.Keys.All(i => i.IsSellable);
         }
 
         /// <summary>
