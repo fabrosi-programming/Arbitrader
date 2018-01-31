@@ -118,19 +118,33 @@ namespace Arbitrader.GW2API.Model
         /// <param name="count">The number of the item to be priced.</param>
         /// <returns>The lower either the price to buy the item on the market or the price to craft
         /// the item.</returns>
-        internal int GetLowestPrice(int count)
+        internal int GetLowestPrice(int count, ref AcquisitionPlan plan)
         {
             int marketPrice;
             int craftPrice;
 
             if (!this.IsBuyable && !this.IsCraftable)
+            {
+                plan.Append(ActionType.Other, this, count);
                 return 0;
+            }
 
             // at least one of marketPrice and craftPrice will be something other than Int32.MaxValue
-            marketPrice = this.IsBuyable ? this.GetMarketPrice(count) : Int32.MaxValue;
-            craftPrice = this.IsCraftable ? this.GeneratingRecipes.Min(r => r.GetCraftingPrice(count)) : Int32.MaxValue;
+            AcquisitionPlan marketPlan = null; //TODO: smells funny
+            marketPrice = this.IsBuyable ? this.GetMarketPrice(count, out marketPlan) : Int32.MaxValue;
 
-            return Math.Min(marketPrice, craftPrice);
+            AcquisitionPlan craftingPlan = null; //TODO: smells funny
+            craftPrice = this.IsCraftable ? this.GeneratingRecipes.Min(r => r.GetCraftingPrice(count, out craftingPlan)) : Int32.MaxValue;
+            
+            if (marketPrice <= craftPrice)
+            {
+                plan.Append(marketPlan);
+                return marketPrice;
+            }
+
+            plan.Append(craftingPlan);
+            plan.Append(ActionType.Craft, this, count);
+            return craftPrice;
         }
 
         /// <summary>
@@ -140,9 +154,9 @@ namespace Arbitrader.GW2API.Model
         /// <param name="count">The number of the item to be priced.</param>
         /// <returns>The lowest price that can be paid on the market to obtain the specified number
         /// of the item.</returns>
-        internal int GetMarketPrice(int count)
+        internal int GetMarketPrice(int count, out AcquisitionPlan plan)
         {
-            var buyListings = new Queue<Listing>(Listings.Where(l => l.Direction == Direction.Buy)
+            var buyListings = new Queue<Listing>(Listings.Where(l => l.Direction == Direction.Sell)
                                                          .OrderBy(l => l.UnitPrice));
 
             if (buyListings.Sum(l => l.Quantity) < count)
@@ -157,6 +171,9 @@ namespace Arbitrader.GW2API.Model
                 price += bestListing.UnitPrice * Math.Min(bestListing.Quantity, remaining);
                 remaining -= bestListing.Quantity;
             }
+
+            plan = new AcquisitionPlan();
+            plan.Append(ActionType.Buy, this, count, price);
 
             return price;
         }

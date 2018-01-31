@@ -109,13 +109,20 @@ namespace Arbitrader.GW2API.Model
         /// </summary>
         /// <param name="count">The number of times that the recipe is to be crafted.</param>
         /// <returns>The price of crafting the recipe the specified number of times.</returns>
-        internal int GetCraftingPrice(int count)
+        internal int GetCraftingPrice(int count, out AcquisitionPlan plan)
         {
             if (!this.SubIngredientsAreBuyable())
-                return this._outputItem.GetMarketPrice(count);
+            {
+                AcquisitionPlan marketPlan;
+                var price = this._outputItem.GetMarketPrice(count, out marketPlan);
+            }
 
-            return Ingredients.Select(i => i.Key.GetLowestPrice(i.Value * count))
-                              .Sum();
+            var newPlan = new AcquisitionPlan();
+            var ingredientPrice = Ingredients.Select(i => i.Key.GetLowestPrice(i.Value * count, ref newPlan))
+                                             .Sum();
+
+            plan = newPlan;
+            return ingredientPrice;
         }
 
         /// <summary>

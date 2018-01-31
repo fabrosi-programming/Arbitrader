@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Arbitrader.GW2API.Model;
 
 namespace Arbitrader.Sandbox
 {
@@ -200,8 +201,12 @@ namespace Arbitrader.Sandbox
 
             try
             {
-                var price = context.GetLowestPrice(itemName, count);
+                AcquisitionPlan plan;
+                var price = context.GetLowestPrice(itemName, count, out plan);
                 Console.WriteLine($"Best price: {price}"); //TODO: indicate market; indicate price path
+
+                foreach (var step in plan)
+                    Console.WriteLine(step);
             }
             catch (InvalidOperationException e) //TODO: use bespoke exception type
             {
