@@ -22,7 +22,9 @@ namespace Arbitrader.Sandbox
         /// <param name="args">Command line arguments passed in the invocation of the application.</param>
         public static void Main(string[] args)
         {
+            Console.WriteLine("Loading item context...");
             var context = new ItemContext();
+            Console.WriteLine("Done.\r\n\r\n\r\n");
 
             var menu = new ConsoleMenu("Select an option:", true);
             menu.AddOption('r', new ConsoleMenu.MenuOption()
@@ -40,10 +42,10 @@ namespace Arbitrader.Sandbox
                 Description = "Modify watched items",
                 Action = () => ModifyWatchedItems(context)
             });
-            menu.AddOption('p', new ConsoleMenu.MenuOption()
+            menu.AddOption('s', new ConsoleMenu.MenuOption()
             {
-                Description = "Find the cheapest price to acquire an item",
-                Action = () => FindCheapestPrice(context)
+                Description = "Get acquisition steps",
+                Action = () => GetAcquisitionSteps(context)
             });
 
             menu.Display();
@@ -186,7 +188,7 @@ namespace Arbitrader.Sandbox
             menu.Display();
         }
 
-        private static void FindCheapestPrice(ItemContext context)
+        private static void GetAcquisitionSteps(ItemContext context)
         {
             Console.WriteLine("Item name:");
             var itemName = Console.ReadLine();
@@ -201,12 +203,11 @@ namespace Arbitrader.Sandbox
 
             try
             {
-                AcquisitionPlan plan;
-                var price = context.GetLowestPrice(itemName, count, out plan);
-                Console.WriteLine($"Best price: {price}"); //TODO: indicate market; indicate price path
+                var step = context.GetBestStep(itemName, count);
+                Console.WriteLine(step);
 
-                foreach (var step in plan)
-                    Console.WriteLine(step);
+                //foreach (var subStep in step)
+                //    Console.WriteLine(subStep);
             }
             catch (InvalidOperationException e) //TODO: use bespoke exception type
             {

@@ -74,12 +74,10 @@
     <Compile Include="Entities\WatchedItem.cs" />
     <Compile Include="IAPI.cs" />
     <Compile Include="Model\AcquisitionStep.cs" />
-    <Compile Include="Model\ActionType.cs" />
     <Compile Include="Model\Direction.cs" />
     <Compile Include="Model\Items.cs" />
     <Compile Include="Model\Listing.cs" />
     <Compile Include="Model\Listings.cs" />
-    <Compile Include="Model\AcquisitionPlan.cs" />
     <Compile Include="Model\Rarity.cs" />
     <Compile Include="Model\ItemType.cs" />
     <Compile Include="Model\RecipeType.cs" />

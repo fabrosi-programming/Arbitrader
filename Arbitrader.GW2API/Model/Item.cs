@@ -111,40 +111,22 @@ namespace Arbitrader.GW2API.Model
                 this.Flags.Add((Flag)Enum.Parse(typeof(Flag), flagEntity.Name));
         }
 
-        /// <summary>
-        /// Returns the lower either the price to buy the item on the market or the price to craft
-        /// the item.
-        /// </summary>
-        /// <param name="count">The number of the item to be priced.</param>
-        /// <returns>The lower either the price to buy the item on the market or the price to craft
-        /// the item.</returns>
-        internal int GetLowestPrice(int count, ref AcquisitionPlan plan)
+        public AcquisitionStep GetBestSteps(int count)
         {
-            int marketPrice;
-            int craftPrice;
+            return this.GetAcquisitionSteps(count).MinimizeOn(s => s.GetBestPrice());
+        }
 
+        public IEnumerable<AcquisitionStep> GetAcquisitionSteps(int count)
+        {
             if (!this.IsBuyable && !this.IsCraftable)
-            {
-                plan.Append(ActionType.Other, this, count);
-                return 0;
-            }
+                yield return new AcquireStep(this, count);
 
-            // at least one of marketPrice and craftPrice will be something other than Int32.MaxValue
-            AcquisitionPlan marketPlan = null; //TODO: smells funny
-            marketPrice = this.IsBuyable ? this.GetMarketPrice(count, out marketPlan) : Int32.MaxValue;
+            if (this.IsBuyable)
+                yield return new BuyStep(this, count, this.GetMarketPrice);
 
-            AcquisitionPlan craftingPlan = null; //TODO: smells funny
-            craftPrice = this.IsCraftable ? this.GeneratingRecipes.Min(r => r.GetCraftingPrice(count, out craftingPlan)) : Int32.MaxValue;
-            
-            if (marketPrice <= craftPrice)
-            {
-                plan.Append(marketPlan);
-                return marketPrice;
-            }
-
-            plan.Append(craftingPlan);
-            plan.Append(ActionType.Craft, this, count);
-            return craftPrice;
+            if (this.IsCraftable)
+                foreach (var recipe in this.GeneratingRecipes)
+                    yield return new CraftStep(recipe, count);
         }
 
         /// <summary>
@@ -154,7 +136,7 @@ namespace Arbitrader.GW2API.Model
         /// <param name="count">The number of the item to be priced.</param>
         /// <returns>The lowest price that can be paid on the market to obtain the specified number
         /// of the item.</returns>
-        internal int GetMarketPrice(int count, out AcquisitionPlan plan)
+        internal int GetMarketPrice(int count)
         {
             var buyListings = new Queue<Listing>(Listings.Where(l => l.Direction == Direction.Sell)
                                                          .OrderBy(l => l.UnitPrice));
@@ -171,9 +153,6 @@ namespace Arbitrader.GW2API.Model
                 price += bestListing.UnitPrice * Math.Min(bestListing.Quantity, remaining);
                 remaining -= bestListing.Quantity;
             }
-
-            plan = new AcquisitionPlan();
-            plan.Append(ActionType.Buy, this, count, price);
 
             return price;
         }

@@ -25,7 +25,7 @@ namespace Arbitrader.GW2API.Model
         /// <summary>
         /// The unique identifier in the GW2 API for the item that results from crafting the recipe.
         /// </summary>
-        private Item _outputItem;
+        public Item OutputItem { get; private set; }
 
         /// <summary>
         /// The count of the output item that results from crafting the recipe.
@@ -53,28 +53,6 @@ namespace Arbitrader.GW2API.Model
         internal Dictionary<Item, int> Ingredients { get; set; } = new Dictionary<Item, int>();
 
         /// <summary>
-        /// Gets a list of all nodes on the ingredient tree that this recipe depends on.
-        /// </summary>
-        internal List<Item> IngredientTreeNodes
-        {
-            get
-            {
-                var nodes = new List<Item>()
-                { this._outputItem };
-
-                var endpoints = this.Ingredients.Keys.Where(i => i.GeneratingRecipes.Count == 0);
-
-                nodes.AddRange(endpoints);
-
-                foreach (var item in this.Ingredients.Keys.Except(endpoints))
-                    foreach (var recipe in item.GeneratingRecipes)
-                        nodes.AddRange(recipe.IngredientTreeNodes);
-
-                return nodes.Distinct().ToList();
-            }
-        }
-
-        /// <summary>
         /// Initializes a new instance of <see cref="Recipe"/>. Uses the database context to resolve item IDs to instances of <see cref="Item"/>.
         /// </summary>
         /// <param name="recipeEntity">The entity containing the descriptors for the recipe.</param>
@@ -82,7 +60,7 @@ namespace Arbitrader.GW2API.Model
         internal Recipe(RecipeEntity recipeEntity, Func<int, Item> getItem)
         {
             this._type = Enum.TryParse(recipeEntity.Type, out RecipeType type) ? type : RecipeType.Unknown;
-            this._outputItem = getItem(recipeEntity.OutputItemID.Value);
+            this.OutputItem = getItem(recipeEntity.OutputItemID.Value);
             this._outputItemCount = recipeEntity.OutputItemCount ?? 0;
 
             foreach (var disciplineResult in recipeEntity.Disciplines)
@@ -101,28 +79,7 @@ namespace Arbitrader.GW2API.Model
             foreach (var ingredient in this.Ingredients.Keys)
                 ingredient.DependentRecipes.Add(this);
 
-            this._outputItem.GeneratingRecipes.Add(this);
-        }
-
-        /// <summary>
-        /// Returns the price of crafting the recipe the specified number of times.
-        /// </summary>
-        /// <param name="count">The number of times that the recipe is to be crafted.</param>
-        /// <returns>The price of crafting the recipe the specified number of times.</returns>
-        internal int GetCraftingPrice(int count, out AcquisitionPlan plan)
-        {
-            if (!this.SubIngredientsAreBuyable())
-            {
-                AcquisitionPlan marketPlan;
-                var price = this._outputItem.GetMarketPrice(count, out marketPlan);
-            }
-
-            var newPlan = new AcquisitionPlan();
-            var ingredientPrice = Ingredients.Select(i => i.Key.GetLowestPrice(i.Value * count, ref newPlan))
-                                             .Sum();
-
-            plan = newPlan;
-            return ingredientPrice;
+            this.OutputItem.GeneratingRecipes.Add(this);
         }
 
         /// <summary>
@@ -152,7 +109,7 @@ namespace Arbitrader.GW2API.Model
         /// <returns>A string representation of the recipe.</returns>
         public override string ToString()
         {
-            return $"{this._outputItem} | {this._outputItemCount}";
+            return $"{this.OutputItem} | {this._outputItemCount}";
         }
     }
 }

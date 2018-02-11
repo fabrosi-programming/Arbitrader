@@ -159,7 +159,7 @@ namespace Arbitrader.GW2API
         /// <param name="itemName">The name of the item to be priced.</param>
         /// <param name="count">The number of the item required.</param>
         /// <returns>The lowest price for which a number of an item can be obtained</returns>
-        public int GetLowestPrice(string itemName, int count, out AcquisitionPlan plan)
+        public IEnumerable<AcquisitionStep> GetAcquisitionSteps(string itemName, int count)
         {
             this.BuildModel();
 
@@ -168,14 +168,19 @@ namespace Arbitrader.GW2API
             if (item == null)
                 throw new InvalidOperationException($"Could not find an item with name \"{itemName}\""); //TODO: use bespoke exception type
 
-            plan = new AcquisitionPlan();
-            return item.GetLowestPrice(count, ref plan);
+            return item.GetAcquisitionSteps(count);
         }
 
-        public int GetLowestPrice(string itemName, int count)
+        public AcquisitionStep GetBestStep(string itemName, int count)
         {
-            AcquisitionPlan plan;
-            return this.GetLowestPrice(itemName, count, out plan);
+            this.BuildModel();
+
+            var item = this.Items.Where(i => i.Name.Equals(itemName, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+
+            if (item == null)
+                throw new InvalidOperationException($"Could not find an item with name \"{itemName}\""); //TODO: use bespoke exception type
+
+            return item.GetBestSteps(count);
         }
 
         #region ArbitraderEntities Pass-Through
@@ -186,6 +191,7 @@ namespace Arbitrader.GW2API
         public void AddWatchedItems(string pattern)
         {
             this._entities.AddWatchedItems(pattern);
+            this._isModelBuilt = false;
         }
 
         /// <summary>
