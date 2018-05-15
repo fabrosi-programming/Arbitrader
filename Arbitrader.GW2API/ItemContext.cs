@@ -78,11 +78,8 @@ namespace Arbitrader.GW2API
                     this._api.UploadToDatabase<RecipeResult, RecipeEntity>(resource, this._entities.Recipes);
                     break;
                 case APIResource.CommerceListings:
-                    this.BuildModel();
-                    var sellableItems = this.Items.ExcludeNonSellable();
-                    var ids = this.Items.Select(i => i.ID);
+                    var sellableItems = this.ApplyListingsToModel();
                     this._api.UploadToDatabase<ListingResult, ListingEntity>(resource, this._entities.Listings, sellableItems);
-                    sellableItems.AttachListings(this._entities.Listings);
                     break;
                 default:
                     throw new ArgumentException($"Unable to load data for API resource \"{nameof(resource)}\".", nameof(resource));
@@ -122,6 +119,15 @@ namespace Arbitrader.GW2API
             this._isModelBuilt = true;
         }
 
+        internal Items ApplyListingsToModel()
+        {
+            this.BuildModel();
+            var sellableItems = this.Items.ExcludeNonSellable();
+            sellableItems.AttachListings(this._entities.Listings);
+
+            return sellableItems;
+        }
+
         /// <summary>
         /// Resolves a unique identifier in the GW2 API to an instance of <see cref="Item"/>.
         /// </summary>
@@ -158,22 +164,10 @@ namespace Arbitrader.GW2API
         /// </summary>
         /// <param name="itemName">The name of the item to be priced.</param>
         /// <param name="count">The number of the item required.</param>
-        /// <returns>The lowest price for which a number of an item can be obtained</returns>
-        public IEnumerable<AcquisitionStep> GetAcquisitionSteps(string itemName, int count)
-        {
-            this.BuildModel();
-
-            var item = this.Items.Where(i => i.Name.Equals(itemName, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-
-            if (item == null)
-                throw new InvalidOperationException($"Could not find an item with name \"{itemName}\""); //TODO: use bespoke exception type
-
-            return item.GetAcquisitionSteps(count);
-        }
-
+        /// <returns>The steps required to achieve the lowest price for which a number of an item can be obtained.</returns>
         public AcquisitionStep GetBestStep(string itemName, int count)
         {
-            this.BuildModel();
+            this.ApplyListingsToModel();
 
             var item = this.Items.Where(i => i.Name.Equals(itemName, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
 
