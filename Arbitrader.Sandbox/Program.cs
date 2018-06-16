@@ -47,6 +47,11 @@ namespace Arbitrader.Sandbox
                 Description = "Get acquisition steps",
                 Action = () => GetAcquisitionSteps(context)
             });
+            menu.AddOption('a', new ConsoleMenu.MenuOption()
+            {
+                Description = "Find arbitrage opportunities",
+                Action = () => FindArbitrageOpportunities(context)
+            });
 
             menu.Display();
         }
@@ -212,6 +217,27 @@ namespace Arbitrader.Sandbox
             catch (InvalidOperationException e) //TODO: use bespoke exception type
             {
                 Console.WriteLine(e.Message);
+            }
+        }
+
+        private static void FindArbitrageOpportunities(ItemContext context)
+        {
+            Dictionary<Item, int> opportunities = new Dictionary<Item, int>();
+
+            try
+            {
+                opportunities = context.FindPureArbitrage();
+            }
+            catch (Exception e) //TODO: use bespoke exception type
+            {
+                Console.WriteLine(e.Message);
+            }
+
+            foreach (var opportunity in opportunities)
+            {
+                Console.WriteLine($"Item: {opportunity.Key} | Count: {opportunity.Value}");
+                Console.WriteLine(opportunity.Key.GetBestSteps(opportunity.Value));
+                Console.WriteLine("\r\n");
             }
         }
     }

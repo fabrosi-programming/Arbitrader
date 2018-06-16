@@ -73,6 +73,7 @@
     <Compile Include="Entities\IndividualListingEntity.cs" />
     <Compile Include="Entities\WatchedItem.cs" />
     <Compile Include="IAPI.cs" />
+    <Compile Include="InsufficientListingsException.cs" />
     <Compile Include="Model\AcquisitionStep.cs" />
     <Compile Include="Model\Direction.cs" />
     <Compile Include="Model\Items.cs" />

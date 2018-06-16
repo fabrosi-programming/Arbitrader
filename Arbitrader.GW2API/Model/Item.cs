@@ -116,13 +116,38 @@ namespace Arbitrader.GW2API.Model
             return this.GetAcquisitionSteps(count).MinimizeOn(s => s.GetBestPrice());
         }
 
+        public AcquisitionStep WithCostLessThan(int cost)
+        {
+            var count = 1;
+            var steps = GetBestSteps(count);
+            var price = steps.GetBestPrice();
+
+            while (price <= cost * count)
+            {
+                count += 1;
+                try
+                {
+                    steps = GetBestSteps(count);
+                }
+                catch (InsufficientListingsException)
+                {
+                    break;
+                }
+
+                price = steps.GetBestPrice();
+            }
+
+            // step back to before the last iteration and return the plan to execute at the limit price
+            return GetBestSteps(count - 1);
+        }
+
         public IEnumerable<AcquisitionStep> GetAcquisitionSteps(int count)
         {
             if (!this.IsBuyable && !this.IsCraftable)
                 yield return new AcquireStep(this, count);
 
             if (this.IsBuyable)
-                yield return new BuyStep(this, count, this.GetMarketPrice);
+                yield return new BuyStep(this, count, (c) => this.GetMarketPrice(c, Direction.Buy));
 
             if (this.IsCraftable)
                 foreach (var recipe in this.GeneratingRecipes)
@@ -130,26 +155,32 @@ namespace Arbitrader.GW2API.Model
         }
 
         /// <summary>
-        /// Returns the lowest price that can be paid on the market to obtain the specified number
+        /// Returns the best price that can be paid on the market to buy or sell the specified number
         /// of the item.
         /// </summary>
         /// <param name="count">The number of the item to be priced.</param>
+        /// <param name="direction"><see cref="Direction.Buy"/> if the caller intends to buy the item; 
+        /// <see cref="Direction.Sell"/> if the caller intendes to sell the item.</param>
         /// <returns>The lowest price that can be paid on the market to obtain the specified number
         /// of the item.</returns>
-        internal int GetMarketPrice(int count)
+        internal int GetMarketPrice(int count, Direction direction)
         {
-            var buyListings = new Queue<Listing>(Listings.Where(l => l.Direction == Direction.Sell)
-                                                         .OrderBy(l => l.UnitPrice));
+            // invert buy/sell direction to translate the caller's request to the market's language
+            var marketDirection = direction == Direction.Buy ? Direction.Sell : Direction.Buy;
 
-            if (buyListings.Sum(l => l.Quantity) < count)
-                throw new InvalidOperationException($"Insufficient listings in the market to allow {count} of the item to be purchased.");
+            var listings = Listings.Where(l => l.Direction == marketDirection);
+            var orderedListings = new Queue<Listing>(marketDirection == Direction.Sell ? listings.OrderBy(l => l.UnitPrice)
+                                                                                       : listings.OrderByDescending(l => l.UnitPrice));
+
+            if (orderedListings.Sum(l => l.Quantity) < count)
+                throw new InsufficientListingsException(this, count);
 
             var price = 0;
             var remaining = count;
 
             while (remaining > 0)
             {
-                var bestListing = buyListings.Dequeue();
+                var bestListing = orderedListings.Dequeue();
                 price += bestListing.UnitPrice * Math.Min(bestListing.Quantity, remaining);
                 remaining -= bestListing.Quantity;
             }

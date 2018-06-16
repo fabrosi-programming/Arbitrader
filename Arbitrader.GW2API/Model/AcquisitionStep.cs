@@ -11,12 +11,12 @@ namespace Arbitrader.GW2API.Model
     {
         public Item Item { get; private set; }
 
-        public int Count { get; private set; }
+        public int Count { get; protected set; }
 
         public AcquisitionStep(Item item, int count)
         {
-            this.Item = item;
-            this.Count = count;
+            Item = item;
+            Count = count;
         }
 
         public abstract int? GetBestPrice();
@@ -25,12 +25,12 @@ namespace Arbitrader.GW2API.Model
 
         public override string ToString()
         {
-            return $"Item: {this.Item.Name} | Count: {this.Count}";
+            return $"Item: {Item.Name} | Count: {Count}";
         }
 
         public virtual string ToString(string prepend)
         {
-            return $"{prepend}{this.ToString()}";
+            return $"{prepend}{ToString()}";
         }
     }
 
@@ -64,12 +64,12 @@ namespace Arbitrader.GW2API.Model
 
         public BuyStep(Item item, int count, Func<int, int> getMarketPrice) : base(item, count)
         {
-            this._getMarketPrice = getMarketPrice;
+            _getMarketPrice = getMarketPrice;
         }
 
         public override int? GetBestPrice()
         {
-            return this._getMarketPrice(this.Count);
+            return _getMarketPrice(Count);
         }
 
         public override IEnumerable<AcquisitionStep> GetBestSteps()
@@ -82,7 +82,7 @@ namespace Arbitrader.GW2API.Model
 
         public override string ToString()
         {
-            return $"{base.ToString()} | Action: Buy | Price: {this.GetBestPrice()}";
+            return $"{base.ToString()} | Action: Buy | Price: {GetBestPrice()}";
         }
     }
 
@@ -92,33 +92,33 @@ namespace Arbitrader.GW2API.Model
 
         public CraftStep(Recipe recipe, int count) : base(recipe.OutputItem, count)
         {
-            this.IngredientSteps = new Dictionary<Item, IEnumerable<AcquisitionStep>>();
+            IngredientSteps = new Dictionary<Item, IEnumerable<AcquisitionStep>>();
 
             foreach (var ingredient in recipe.Ingredients)
-                this.IngredientSteps.Add(ingredient.Key, ingredient.Key.GetAcquisitionSteps(ingredient.Value * count));
+                IngredientSteps.Add(ingredient.Key, ingredient.Key.GetAcquisitionSteps(ingredient.Value * count));
         }
 
         public override int? GetBestPrice()
         {
-            return this.GetBestSteps()?.Select(s => s.GetBestPrice())?.Sum();
+            return GetBestSteps()?.Select(s => s.GetBestPrice())?.Sum();
         }
 
         public override IEnumerable<AcquisitionStep> GetBestSteps()
         {
-            foreach (var ingredient in this.IngredientSteps)
+            foreach (var ingredient in IngredientSteps)
                 yield return ingredient.Value.MinimizeOn(s => s.GetBestPrice());
         }
 
         public override string ToString()
         {
-            return this.ToString("");
+            return ToString("");
         }
 
         public override string ToString(string prepend)
         {
             var sb = new StringBuilder($"{prepend}{base.ToString()} | Action: Craft");
 
-            foreach (var step in this.GetBestSteps())
+            foreach (var step in GetBestSteps())
                 sb.Append($"\r\n{step.ToString($"{prepend}  ")}");
 
             return sb.ToString();
@@ -137,9 +137,9 @@ namespace Arbitrader.GW2API.Model
             var minValue = valueMap.Values.Min(); // Min() excludes null
             var minSteps = valueMap.Where(s => s.Value == minValue).Select(s => s.Key);
 
-            AcquisitionStep buyStep = minSteps.OfType<BuyStep>().FirstOrDefault();
-            AcquisitionStep craftStep = minSteps.OfType<CraftStep>().FirstOrDefault();
-            AcquisitionStep acquireStep = minSteps.OfType<AcquireStep>().FirstOrDefault();
+            var buyStep = minSteps.OfType<BuyStep>().FirstOrDefault();
+            var craftStep = minSteps.OfType<CraftStep>().FirstOrDefault();
+            var acquireStep = minSteps.OfType<AcquireStep>().FirstOrDefault();
 
             return buyStep ?? craftStep ?? acquireStep;            
         }

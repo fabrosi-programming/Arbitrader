@@ -8,7 +8,7 @@ using Arbitrader.GW2API.Entities;
 
 namespace Arbitrader.GW2API.Model
 {
-    internal class Items : IEnumerable<Item>
+    public class Items : IEnumerable<Item>
     {
         /// <summary>
         /// The internal collection of items.
@@ -22,7 +22,7 @@ namespace Arbitrader.GW2API.Model
         {
             get
             {
-                return this._items.Count;
+                return _items.Count;
             }
         }
 
@@ -39,7 +39,7 @@ namespace Arbitrader.GW2API.Model
         public Items(IEnumerable<Item> items)
         {
             foreach (var item in items)
-                this._items.Add(item);
+                _items.Add(item);
         }
 
         /// <summary>
@@ -58,7 +58,7 @@ namespace Arbitrader.GW2API.Model
         /// <param name="listings">The listings to be loaded.</param>
         public void AttachListings(IEnumerable<ListingEntity> listings)
         {
-            foreach (var item in this._items)
+            foreach (var item in _items)
             {
                 var listing = listings.Where(l => l.APIID == item.ID).FirstOrDefault();
 
@@ -77,7 +77,7 @@ namespace Arbitrader.GW2API.Model
         /// <param name="getGeneratingRecipes">A function to get the generating recipes for an item.</param>
         public void AttachGeneratingRecipes(Func<Item, IEnumerable<Recipe>> getGeneratingRecipes)
         {
-            var items = this._items.Where(i => i.GeneratingRecipes?.Count == 0).ToList();
+            var items = _items.Where(i => i.GeneratingRecipes?.Count == 0).ToList();
 
             foreach (var item in items)
                 item.GeneratingRecipes = getGeneratingRecipes(item).ToList();
@@ -91,7 +91,7 @@ namespace Arbitrader.GW2API.Model
         /// except that it excludes those items that cannot be traded on the trading post.</returns>
         public Items ExcludeNonSellable()
         {
-            return new Items(this._items.Where(i => i.IsBuyable));
+            return new Items(_items.Where(i => i.IsBuyable));
         }
 
         /// <summary>
@@ -100,19 +100,19 @@ namespace Arbitrader.GW2API.Model
         /// <param name="item"></param>
         public void Add(Item item)
         {
-            if (!this._items.Any(i => i.ID == item.ID))
-                this._items.Add(item);
+            if (!_items.Any(i => i.ID == item.ID))
+                _items.Add(item);
         }
 
         #region IEnumerable<Item> Support
         public IEnumerator<Item> GetEnumerator()
         {
-            return this._items.GetEnumerator();
+            return _items.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
         #endregion
     }

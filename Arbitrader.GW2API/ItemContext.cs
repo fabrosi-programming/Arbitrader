@@ -38,7 +38,7 @@ namespace Arbitrader.GW2API
         /// <summary>
         /// The set of items contained by the context.
         /// </summary>
-        internal Items Items = new Items();
+        public Items Items = new Items();
 
         /// <summary>
         /// The entities used for maintaining persistent data in the SQL database.
@@ -50,10 +50,10 @@ namespace Arbitrader.GW2API
         /// </summary>
         public ItemContext()
         {
-            if (!this._entities.Loaded)
-                this._entities.Load();
+            if (!_entities.Loaded)
+                _entities.Load();
 
-            this._api = new API(this._entities); //TODO: extract dependency
+            _api = new API(_entities); //TODO: extract dependency
         }
 
         /// <summary>
@@ -65,21 +65,21 @@ namespace Arbitrader.GW2API
         public void Load(APIResource resource, bool replace)
         {
             if (replace)
-                this._entities.Delete(resource);
+                _entities.Delete(resource);
 
             switch (resource)
             {
                 case APIResource.Items:
-                    this._isModelBuilt = false;
-                    this._api.UploadToDatabase<ItemResult, ItemEntity>(resource, this._entities.Items);
+                    _isModelBuilt = false;
+                    _api.UploadToDatabase<ItemResult, ItemEntity>(resource, _entities.Items);
                     break;
                 case APIResource.Recipes:
-                    this._isModelBuilt = false;
-                    this._api.UploadToDatabase<RecipeResult, RecipeEntity>(resource, this._entities.Recipes);
+                    _isModelBuilt = false;
+                    _api.UploadToDatabase<RecipeResult, RecipeEntity>(resource, _entities.Recipes);
                     break;
                 case APIResource.CommerceListings:
-                    var sellableItems = this.ApplyListingsToModel();
-                    this._api.UploadToDatabase<ListingResult, ListingEntity>(resource, this._entities.Listings, sellableItems);
+                    var sellableItems = ApplyListingsToSellableItems();
+                    _api.UploadToDatabase<ListingResult, ListingEntity>(resource, _entities.Listings, sellableItems);
                     break;
                 default:
                     throw new ArgumentException($"Unable to load data for API resource \"{nameof(resource)}\".", nameof(resource));
@@ -92,19 +92,19 @@ namespace Arbitrader.GW2API
         /// </summary>
         public void BuildModel(bool force = false)
         {
-            if (this._isModelBuilt && !force)
+            if (_isModelBuilt && !force)
                 return;
 
-            this._isModelBuilt = false;
+            _isModelBuilt = false;
 
-            var watchedItemIDs = this._entities.WatchedItems.Select(i => i.APIID);
+            var watchedItemIDs = _entities.WatchedItems.Select(i => i.APIID);
 
             //BUG: doesn't build the model for objects more than 1 level down the crafting tree from watched items
-            var watchedItems = this._entities.WatchedItems.Any()
-                ? this._entities.Items.Where(i => watchedItemIDs.Contains(i.APIID))
-                : this._entities.Items;
+            var watchedItems = _entities.WatchedItems.Any()
+                ? _entities.Items.Where(i => watchedItemIDs.Contains(i.APIID))
+                : _entities.Items;
 
-            this.Items = new Items(watchedItems);
+            Items = new Items(watchedItems);
 
             var before = 0;
             var after = 0;
@@ -112,20 +112,41 @@ namespace Arbitrader.GW2API
             do
             {
                 before = after;
-                this.Items.AttachGeneratingRecipes(this.GetGeneratingRecipes);
-                after = this.Items.Count;
+                Items.AttachGeneratingRecipes(GetGeneratingRecipes);
+                after = Items.Count;
             } while (before != after);
 
-            this._isModelBuilt = true;
+            _isModelBuilt = true;
         }
 
-        internal Items ApplyListingsToModel()
+        /// <summary>
+        /// Attaches market listings to the <see cref="Item"/> objects in the model.
+        /// </summary>
+        /// <returns>The subset of all sellable items within the <see cref="ItemContext"/>.</returns>
+        internal Items ApplyListingsToSellableItems()
         {
-            this.BuildModel();
-            var sellableItems = this.Items.ExcludeNonSellable();
-            sellableItems.AttachListings(this._entities.Listings);
+            BuildModel();
+            var sellableItems = Items.ExcludeNonSellable();
+            sellableItems.AttachListings(_entities.Listings);
 
             return sellableItems;
+        }
+
+        public Dictionary<Item, int> FindPureArbitrage()
+        {
+            var sellableItems = ApplyListingsToSellableItems();
+            var arbitrageOpportunities = new Dictionary<Item, int>();
+
+            foreach (var item in sellableItems)
+            {
+                var bestSellPrice = item.GetMarketPrice(1, Direction.Sell);
+                var opportunity = item.WithCostLessThan(bestSellPrice);
+
+                if (opportunity.Count > 0)
+                    arbitrageOpportunities.Add(opportunity.Item, opportunity.Count);
+                }
+
+            return arbitrageOpportunities;
         }
 
         /// <summary>
@@ -135,14 +156,14 @@ namespace Arbitrader.GW2API
         /// <returns>An instance of <see cref="Item"/> with the specified ID.</returns>
         private Item GetItem(int id)
         {
-            var existingItems = this.Items.Where(i => i.ID == id);
+            var existingItems = Items.Where(i => i.ID == id);
 
             if (existingItems.Any())
                 return existingItems.First();
 
-            var entity = this._entities.Items.Where(i => i.APIID == id).First();
+            var entity = _entities.Items.Where(i => i.APIID == id).First();
             var item = new Item(entity);
-            this.Items.Add(item);
+            Items.Add(item);
 
             return item;
         }
@@ -154,8 +175,8 @@ namespace Arbitrader.GW2API
         /// <returns>A collection of all <see cref="Recipe"/>s that result in the specified <see cref="Item"/> as their output.</returns>
         private IEnumerable<Recipe> GetGeneratingRecipes(Item item)
         {
-            var recipeEntities = this._entities.Recipes.Where(r => r.OutputItemID == item.ID);
-            return recipeEntities.ToList().Select(r => new Recipe(r, this.GetItem));
+            var recipeEntities = _entities.Recipes.Where(r => r.OutputItemID == item.ID);
+            return recipeEntities.ToList().Select(r => new Recipe(r, GetItem));
         }
 
         /// <summary>
@@ -167,13 +188,17 @@ namespace Arbitrader.GW2API
         /// <returns>The steps required to achieve the lowest price for which a number of an item can be obtained.</returns>
         public AcquisitionStep GetBestStep(string itemName, int count)
         {
-            this.ApplyListingsToModel();
-
-            var item = this.Items.Where(i => i.Name.Equals(itemName, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            var item = Items.Where(i => i.Name.Equals(itemName, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
 
             if (item == null)
                 throw new InvalidOperationException($"Could not find an item with name \"{itemName}\""); //TODO: use bespoke exception type
 
+            return GetBestStep(item, count);
+        }
+
+        public AcquisitionStep GetBestStep(Item item, int count)
+        {
+            ApplyListingsToSellableItems();
             return item.GetBestSteps(count);
         }
 
@@ -184,8 +209,8 @@ namespace Arbitrader.GW2API
         /// <param name="pattern">The string pattern to compare item names against.</param>
         public void AddWatchedItems(string pattern)
         {
-            this._entities.AddWatchedItems(pattern);
-            this._isModelBuilt = false;
+            _entities.AddWatchedItems(pattern);
+            _isModelBuilt = false;
         }
 
         /// <summary>
@@ -194,7 +219,7 @@ namespace Arbitrader.GW2API
         /// <param name="name">The exact case-insensitive name of the item to be removed.</param>
         public void RemoveWatchedItem(string name)
         {
-            this._entities.RemoveWatchedItems(name, false);
+            _entities.RemoveWatchedItems(name, false);
         }
 
         /// <summary>
@@ -203,7 +228,7 @@ namespace Arbitrader.GW2API
         /// <param name="pattern">The string pattern to compare item names against.</param>
         public void RemoveWatchedItems(string pattern)
         {
-            this._entities.RemoveWatchedItems(pattern);
+            _entities.RemoveWatchedItems(pattern);
         }
 
         /// <summary>
@@ -211,24 +236,24 @@ namespace Arbitrader.GW2API
         /// </summary>
         public void ClearWatchedItems()
         {
-            this._entities.ClearWatchedItems();
+            _entities.ClearWatchedItems();
         }
         #endregion
 
         #region IDisposable Support
         // This code added to correctly implement the disposable pattern.
-        private bool disposedValue = false; // To detect redundant calls
+        private bool _disposedValue = false; // To detect redundant calls
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!_disposedValue)
             {
                 if (disposing)
                 {
-                    this._entities.Dispose();
+                    _entities.Dispose();
                 }
 
-                disposedValue = true;
+                _disposedValue = true;
             }
         }
         
