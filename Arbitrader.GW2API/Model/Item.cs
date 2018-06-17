@@ -181,7 +181,10 @@ namespace Arbitrader.GW2API.Model
             while (remaining > 0)
             {
                 var bestListing = orderedListings.Dequeue();
-                price += bestListing.UnitPrice * Math.Min(bestListing.Quantity, remaining);
+                var quantity = Math.Min(bestListing.Quantity, remaining);
+                price += bestListing.UnitPrice * quantity;
+                price -= TradingPost.CalculateFees(bestListing.UnitPrice, direction); // may need to separate out fees to clarify order execution
+
                 remaining -= bestListing.Quantity;
             }
 

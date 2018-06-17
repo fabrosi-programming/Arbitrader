@@ -74,11 +74,17 @@
     <Compile Include="Entities\WatchedItem.cs" />
     <Compile Include="IAPI.cs" />
     <Compile Include="InsufficientListingsException.cs" />
+    <Compile Include="Model\AcquireStep.cs" />
     <Compile Include="Model\AcquisitionStep.cs" />
+    <Compile Include="Model\AcquisitionStepExtensions.cs" />
+    <Compile Include="Model\BuyStep.cs" />
+    <Compile Include="Model\CraftStep.cs" />
     <Compile Include="Model\Direction.cs" />
     <Compile Include="Model\Items.cs" />
     <Compile Include="Model\Listing.cs" />
     <Compile Include="Model\Listings.cs" />
+    <Compile Include="Model\Order.cs" />
+    <Compile Include="Model\TradingPost.cs" />
     <Compile Include="Model\Rarity.cs" />
     <Compile Include="Model\ItemType.cs" />
     <Compile Include="Model\RecipeType.cs" />

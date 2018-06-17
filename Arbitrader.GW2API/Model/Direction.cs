@@ -1,6 +1,6 @@
 ﻿namespace Arbitrader.GW2API.Model
 {
-    internal enum Direction
+    public enum Direction
     {
         None,
         Buy,

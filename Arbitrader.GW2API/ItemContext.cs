@@ -132,19 +132,25 @@ namespace Arbitrader.GW2API
             return sellableItems;
         }
 
-        public Dictionary<Item, int> FindPureArbitrage()
+        public List<Order> FindPureArbitrage()
         {
             var sellableItems = ApplyListingsToSellableItems();
-            var arbitrageOpportunities = new Dictionary<Item, int>();
+            var arbitrageOpportunities = new List<Order>();
 
-            foreach (var item in sellableItems)
+            Parallel.ForEach(sellableItems, item =>
             {
                 var bestSellPrice = item.GetMarketPrice(1, Direction.Sell);
                 var opportunity = item.WithCostLessThan(bestSellPrice);
 
                 if (opportunity.Count > 0)
-                    arbitrageOpportunities.Add(opportunity.Item, opportunity.Count);
-                }
+                    arbitrageOpportunities.Add(new Order()
+                    {
+                        Direction = Direction.Sell,
+                        Item = item,
+                        Count = opportunity.Count,
+                        UnitPrice = bestSellPrice
+                    });
+            });
 
             return arbitrageOpportunities;
         }

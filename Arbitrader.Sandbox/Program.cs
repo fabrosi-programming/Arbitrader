@@ -210,9 +210,6 @@ namespace Arbitrader.Sandbox
             {
                 var step = context.GetBestStep(itemName, count);
                 Console.WriteLine(step);
-
-                //foreach (var subStep in step)
-                //    Console.WriteLine(subStep);
             }
             catch (InvalidOperationException e) //TODO: use bespoke exception type
             {
@@ -222,22 +219,19 @@ namespace Arbitrader.Sandbox
 
         private static void FindArbitrageOpportunities(ItemContext context)
         {
-            Dictionary<Item, int> opportunities = new Dictionary<Item, int>();
-
             try
             {
-                opportunities = context.FindPureArbitrage();
+                var opportunities = context.FindPureArbitrage();
+
+                foreach (var opportunity in opportunities)
+                {
+                    Console.WriteLine($"Item: {opportunity.Item} | Count: {opportunity.Count} | Action: {opportunity.Direction} | Unit Price: {opportunity.UnitPrice}");
+                    Console.WriteLine($"{opportunity.Item.GetBestSteps(opportunity.Count)}\r\n");
+                }
             }
             catch (Exception e) //TODO: use bespoke exception type
             {
                 Console.WriteLine(e.Message);
-            }
-
-            foreach (var opportunity in opportunities)
-            {
-                Console.WriteLine($"Item: {opportunity.Key} | Count: {opportunity.Value}");
-                Console.WriteLine(opportunity.Key.GetBestSteps(opportunity.Value));
-                Console.WriteLine("\r\n");
             }
         }
     }
